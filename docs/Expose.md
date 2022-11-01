@@ -1,6 +1,6 @@
 ---
-title: Exposé SIA Arbeit
-subtitle: ENTROPIE EINER WIRTSCHAFT
+title: Exposé SIA-Arbeit
+subtitle: ENTROPIE EINES WIRTSCHAFTSSYSTEMS
 author: Daniel Meiborg
 bibliography: main.bib
 csl: ieee-with-url.csl
@@ -19,10 +19,10 @@ header-includes: \usepackage[a4paper, top=0.5cm, left=1cm, right=1cm, bottom=0.5
 John von Neumann zu Claude Shannon, *Scientific American Vol. 225 No. 3, (1971)*
 
 # Thema
-*Lassen sich einfache ökonomische Prozesse mit einem Markov-Prozess mit einer
+*Lassen sich einfache ökonomische Prozesse durch einem Markov-Prozess mit einer
 uniformen stationären Wahrscheinlichkeitsverteilung modellieren und aus der
-durch äußere Einflüsse entstehenden Entropiereduktion Rückschlüsse auf unsere
-Wirtschaft treffen?*
+durch äußere Einflüsse entstehenden Entropiereduktion Rückschlüsse auf
+verschiedene Wirtschaftssysteme treffen?*
 
 
 Grundbaustein dieser Herangehensweise ist der zweite Hauptsatz der
@@ -30,8 +30,9 @@ Thermodynamik. Dieser gilt unter anderem für Markov-Prozesse (auch *Markov
 Chains* genannt) unter bestimmten Voraussetzungen[@cover1994processes]. Durch
 manuelles Eingreifen lässt sich die Entropie des Systems allerdings reduzieren.
 Diese Entropiereduktion ist äquivalent zu der Menge an Information, die man
-durch das Eingreifen erhält. Wenn man das in mehrere Subumgebungen unterteilt,
-kann man dadurch mehrere Wirtschaftstypen und ihre Eigenschaften vergleichen.
+durch das Eingreifen erhält. Wenn man dieses System in mehrere Subumgebungen
+unterteilt, kann man dadurch mehrere Wirtschaftstypen und ihre Eigenschaften
+vergleichen.
 
 ## Motivation
 Ziel dieses Modells sind tiefere Erkenntnisse über das Grenzwertverhalten von
@@ -39,11 +40,10 @@ Wirtschaften, sowie diese nach Typen basierend auf ihrer Entropie zu
 klassifizieren.
 
 ## Forschungsstand
-Im bisherigen Forschungsstand wurden zwar schon Markov-Prozesse für die
-Modellierung von Wirtschaften verwendet, allerdings wurde dabei nicht auf die
-Entropie im oben beschriebenen Sinne
-geachtet[@barde2020macroeconomic][@Kostoska2020absorbingmc]. Genauso wurde auch
-das Entropieverhalten von Markov-Prozessen analysiert, aber nicht auf die
+Bisher wurden zwar schon Markov-Prozesse für die Modellierung von Wirtschaften
+verwendet, allerdings wurde dabei nicht auf die Entropie im oben beschriebenen
+Sinne geachtet [@barde2020macroeconomic;@Kostoska2020absorbingmc]. Genauso wurde
+auch das Entropieverhalten von Markov-Prozessen analysiert, aber nicht auf die
 Wirtschaft bezogen [@Rahman2022mccharacteristics].
 
 # Zeitplan
