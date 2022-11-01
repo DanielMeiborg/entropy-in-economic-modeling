@@ -6,16 +6,17 @@ bibliography: main.bib
 csl: ieee-with-url.csl
 link-citations: true
 documentclass: article
-# header-includes: |
-    # \usepackage[a4paper, top=1cm, left=1cm, right=1cm, bottom=1cm]{geometry}
+header-includes: \usepackage[a4paper, top=0.5cm, left=1cm, right=1cm, bottom=0.5cm]{geometry}
 ---
+
+\pagenumbering{gobble}
 
 \maketitle
 
 >*You should call it entropy [...] no one really knows what entropy really is,
 >so in a debate you will always have the advantage.*
-- John von Neumann zu Claude Shannon, *Scientific American Vol. 225 No. 3,
-    (1971)*
+
+John von Neumann zu Claude Shannon, *Scientific American Vol. 225 No. 3, (1971)*
 
 # Thema
 *Lassen sich einfache ökonomische Prozesse mit einem Markov-Prozess mit einer
@@ -31,7 +32,6 @@ manuelles Eingreifen lässt sich die Entropie des Systems allerdings reduzieren.
 Diese Entropiereduktion ist äquivalent zu der Menge an Information, die man
 durch das Eingreifen erhält. Wenn man das in mehrere Subumgebungen unterteilt,
 kann man dadurch mehrere Wirtschaftstypen und ihre Eigenschaften vergleichen.
-
 
 ## Motivation
 Ziel dieses Modells sind tiefere Erkenntnisse über das Grenzwertverhalten von
