@@ -1,5 +1,4 @@
 # SIA
 
-My Schüler-Ingenieur-Akademie (scholar-engineer-acadamy) project: Simulation of
-a simplistic civilization and analysis of its Shannon-entropy.
-See docs for details.
+My Schüler-Ingenieur-Akademie (scholar-engineer-acadamy) project: Entropy of an
+economy. See docs for details.

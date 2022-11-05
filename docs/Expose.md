@@ -27,7 +27,7 @@ verschiedene Wirtschaftssysteme treffen?*
 
 Grundbaustein dieser Herangehensweise ist der zweite Hauptsatz der
 Thermodynamik. Dieser gilt unter anderem für Markov-Prozesse (auch *Markov
-Chains* genannt) unter bestimmten Voraussetzungen[@cover1994processes]. Durch
+Chains* genannt) unter bestimmten Voraussetzungen [@cover1994processes]. Durch
 manuelles Eingreifen lässt sich die Entropie des Systems allerdings reduzieren.
 Diese Entropiereduktion ist äquivalent zu der Menge an Information, die man
 durch das Eingreifen erhält. Wenn man dieses System in mehrere Subumgebungen
@@ -48,23 +48,22 @@ Wirtschaft bezogen [@Rahman2022mccharacteristics].
 
 <!-- TODO: Framework vs Simulation -->
 # Zeitplan
-- **Recherche** *1 Monat* Einlesen in das Themengebiet
-- **Planung** *2 Wochen* Konzeptionierung des Modells und der Versuche
-- **Framework** *1-2 Monate* Programmierung des Frameworks für die
+- **Recherche** *1 Monat* - Einlesen in das Themengebiet
+- **Planung** *1 Monat* - Konzeptionierung des Modells und der Versuche
+- **Framework** *2 Monate* - Programmierung eines Simulation Frameworks für die
   Markov-Prozess-Analyse
-- **Modellierung** *2 Wochen* Genaue Konfiguration/Eingabe der Parameter des
+- **Modellierung** *2 Wochen* - Genaue Konfiguration/Eingabe der Parameter des
   Modells
-- **Analyse** *1 Woche* Untersuchung des Modells i.e. Spectral Analysis, Finden
-  der stabilen Konfiguration
-- **Manipulation** *1 Monat* Eingreifen in die Simulation und Analyse der
+- **Analyse** *1 Woche* - Untersuchung des Modells i.e. Spectral Analysis,
+  Finden der stabilen Konfiguration
+- **Manipulation** *2 Wochen* - Eingreifen in die Simulation und Analyse der
   Entropie
-- **Interpretation** *1 Monat* Zurückführen der Ergebnisse auf die Wirtschaft
-- **Schriftliche Arbeit** *2 Monate* Ausformulieren der schriftlichen Arbeit
+- **Interpretation** *2 Wochen* - Zurückführen der Ergebnisse auf die Wirtschaft
+- **Schriftliche Arbeit** *2 Monate* - Ausformulieren der schriftlichen Arbeit
 
 # Mögliche Probleme
-<!-- TODO: Klarifizieren -->
-- **Modellierung** Die Markov-Eigenschaft ist nicht sinnvoll in diesem Modell
-  erfüllbar.
+- **Modellierung** Volkswirtschaften erfüllen die Markov-Eigenschaft nicht i.e.
+  nicht auf diese Weise modellieren.
 - **Komplexität** Die benötigte Komplexitätsreduktion macht die Resultate
   unbrauchbar.
 - **Speichereskalation** Durch zu viele Parameter wächst der Speicherbedarf
