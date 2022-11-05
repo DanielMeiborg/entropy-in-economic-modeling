@@ -35,8 +35,8 @@ unterteilt, kann man dadurch mehrere Wirtschaftstypen und ihre Eigenschaften
 vergleichen.
 
 ## Motivation
-Ziel dieses Modells sind tiefere Erkenntnisse über das Grenzwertverhalten von
-Wirtschaften, sowie diese nach Typen basierend auf ihrer Entropie zu
+Ziel dieses Modells ist es tiefere Erkenntnisse über das Grenzwertverhalten von
+Wirtschaften zu gewinnen, sowie diese nach Typen basierend auf ihrer Entropie zu
 klassifizieren.
 
 ## Forschungsstand
@@ -46,22 +46,28 @@ Sinne geachtet [@barde2020macroeconomic;@Kostoska2020absorbingmc]. Genauso wurde
 auch das Entropieverhalten von Markov-Prozessen analysiert, aber nicht auf die
 Wirtschaft bezogen [@Rahman2022mccharacteristics].
 
+<!-- TODO: Framework vs Simulation -->
 # Zeitplan
-- **Recherche** Einlesen in das Themengebiet
-- **Planung** Konzeptionierung des Modells und der Versuche
-- **Framework** Programmierung des Frameworks für die Markov-Prozess-Analyse
-- **Modellierung** Genaue Konfiguration/Eingabe der Parameter des Modells
-- **Analyse** Untersuchung des Modells mit bisherigen Methoden
-- **Manipulation** Eingreifen in die Simulation und Analyse der Entropie
-- **Interpretation** Zurückführen der Ergebnisse auf die Wirtschaft
-- **Wiederholung** Wiederholung mit anderen Modellen
+- **Recherche** *1 Monat* Einlesen in das Themengebiet
+- **Planung** *2 Wochen* Konzeptionierung des Modells und der Versuche
+- **Framework** *1-2 Monate* Programmierung des Frameworks für die
+  Markov-Prozess-Analyse
+- **Modellierung** *2 Wochen* Genaue Konfiguration/Eingabe der Parameter des
+  Modells
+- **Analyse** *1 Woche* Untersuchung des Modells i.e. Spectral Analysis, Finden
+  der stabilen Konfiguration
+- **Manipulation** *1 Monat* Eingreifen in die Simulation und Analyse der
+  Entropie
+- **Interpretation** *1 Monat* Zurückführen der Ergebnisse auf die Wirtschaft
+- **Schriftliche Arbeit** *2 Monate* Ausformulieren der schriftlichen Arbeit
 
 # Mögliche Probleme
+<!-- TODO: Klarifizieren -->
 - **Modellierung** Die Markov-Eigenschaft ist nicht sinnvoll in diesem Modell
   erfüllbar.
 - **Komplexität** Die benötigte Komplexitätsreduktion macht die Resultate
   unbrauchbar.
-- **Speichereskalation** Durch zu viele Parameter wächst der Speicherdarf
+- **Speichereskalation** Durch zu viele Parameter wächst der Speicherbedarf
   unkontrolliert.
 
 # Quellen
