@@ -46,7 +46,6 @@ Sinne geachtet [@barde2020macroeconomic;@Kostoska2020absorbingmc]. Genauso wurde
 auch das Entropieverhalten von Markov-Prozessen analysiert, aber nicht auf die
 Wirtschaft bezogen [@Rahman2022mccharacteristics].
 
-<!-- TODO: Framework vs Simulation -->
 # Zeitplan
 - **Recherche** *1 Monat* - Einlesen in das Themengebiet
 - **Planung** *1 Monat* - Konzeptionierung des Modells und der Versuche
