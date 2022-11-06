@@ -61,8 +61,8 @@ Wirtschaft bezogen [@Rahman2022mccharacteristics].
 - **Schriftliche Arbeit** *2 Monate* - Ausformulieren der schriftlichen Arbeit
 
 # Mögliche Probleme
-- **Modellierung** Volkswirtschaften erfüllen die Markov-Eigenschaft nicht i.e.
-  nicht auf diese Weise modellieren.
+- **Modellierung** Wirtscahftssysteme erfüllen die Markov-Eigenschaft nicht i.e.
+  lassen sich nicht so Weise modellieren.
 - **Komplexität** Die benötigte Komplexitätsreduktion macht die Resultate
   unbrauchbar.
 - **Speichereskalation** Durch zu viele Parameter wächst der Speicherbedarf
