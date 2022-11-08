@@ -1,10 +1,9 @@
-project_name: SIA
 services:
   app:
     entrypoint:
     - sleep
     - infinity
-    image: python:latest
+    image: docker/dev-environments-default:latest
     init: true
     volumes:
     - type: bind
