@@ -44,9 +44,14 @@ nicht direkt festegelegt wird, sondern erst durch die Simulation mit im Modell
 bestimmten Regeln bestimmt wird.
 
 # Motivation
-Ziel dieses Modells ist es tiefere Erkenntnisse über das Grenzwertverhalten von
+Ziel dieses Modells ist es, tiefere Erkenntnisse über das Grenzwertverhalten von
 Wirtschaften zu gewinnen, sowie diese nach Typen basierend auf ihrer Entropie zu
-klassifizieren.
+klassifizieren. So könnte diese Arbeit zum Beispiel zu dem Ergebnis führen, dass
+ein kapitalistisches Wirtschaftssystem unter externen Einflüssen (zum Beispiel
+durch unvorhersehbare Naturkatastrophen) eine deutlich höhere bzw. niedrigere
+Entropiereduktion aufweist als eine sozialistische Volkswirtschaft. Dadurch
+könnte man einen Maßstab entwickeln, der die Empfindlichkeit eines
+Wirtschaftssystems dementsprechend beurteilt.
 
 # Forschungsstand
 Bisher wurden zwar schon Markov-Prozesse für die Modellierung von Wirtschaften
@@ -55,18 +60,19 @@ Sinne geachtet [@barde2020macroeconomic;@Kostoska2020absorbingmc]. Genauso wurde
 auch das Entropieverhalten von Markov-Prozessen analysiert, aber nicht auf die
 Wirtschaft bezogen [@Rahman2022mccharacteristics].
 
-# Zeitplan und Vorgehen
-- **Recherche** *1 Monat* - Einlesen in das Themengebiet
-- **Planung** *1 Monat* - Konzeptionierung des Modells und der Versuche
-- **Framework** *2 Monate* - Programmierung der Simulation bzw. des
+# Zeitplan
+- **Recherche** *4 Wochen* - Einlesen in das Themengebiet
+- **Planung** *3 Wochen* - Konzeptionierung des Modells
+- **Framework** *6 Wochen* - Programmierung der Simulation bzw. des
   Analyse-Frameworks für die Markov-Prozess-Analyse
-- **Modellierung** *2 Wochen* - Genaue Konfiguration/Eingabe der Parameter des
+- **Modellierung** *1 Woche* - Genaue Konfiguration/Eingabe der Parameter des
   Modells
-- **Simulation** *1 Woche* - Untersuchung des Modells i.e. Spectral Analysis,
-  Finden der stabilen Konfiguration
+- **Simulation** *1 Woche* - Simulation, Bestimmung der Übergangsmatrix und
+  Untersuchung des Modells i.e. Spectral Analysis, Finden der stabilen
+  Konfiguration mithilfe des Frameworks
 - **Manipulation** *3 Wochen* - Eingreifen in die Simulation und Analyse der
   Entropie
-- **Interpretation** *2 Wochen* - Zurückführen der Ergebnisse auf die Wirtschaft
+- **Interpretation** *1 Woche* - Zurückführen der Ergebnisse auf die Wirtschaft
 - **Schriftliche Arbeit** *6 Wochen* - Ausformulieren der schriftlichen Arbeit
 
 # Methodisches Vorgehen
