@@ -20,13 +20,11 @@ font_size: 12pt
 
 John von Neumann zu Claude Shannon, *Scientific American Vol. 225 No. 3, (1971)*
 
-<!-- TODO: genauer erläutern -->
 # Thema
 *Lassen sich einfache ökonomische Prozesse durch einem Markov-Prozess mit einer
 uniformen stationären Wahrscheinlichkeitsverteilung modellieren und aus der
 durch äußere Einflüsse entstehenden Entropiereduktion Rückschlüsse auf
 verschiedene Wirtschaftssysteme treffen?*
-
 
 Grundbaustein dieser Herangehensweise ist der zweite Hauptsatz der
 Thermodynamik. Dieser gilt unter anderem für Markov-Prozesse (auch *Markov
@@ -37,12 +35,20 @@ durch das Eingreifen erhält. Wenn man dieses System in mehrere Subumgebungen
 unterteilt, kann man dadurch mehrere Wirtschaftstypen und ihre Eigenschaften
 vergleichen.
 
-## Motivation
+Da es möglich ist, mit solchen Markov-Prozessen Erhaltungssätze zu modellieren,
+werden Konstanten, die auf Größen wie Energie oder verfügbaren Ressourcen
+basieren, eine zentrale Rolle bei der Modellierung spielen.
+
+Wichtig zu beachten ist, dass die genaue Übergangsmatrix des Markov-Prozesses
+nicht direkt festegelegt wird, sondern erst durch die Simulation mit im Modell
+bestimmten Regeln bestimmt wird.
+
+# Motivation
 Ziel dieses Modells ist es tiefere Erkenntnisse über das Grenzwertverhalten von
 Wirtschaften zu gewinnen, sowie diese nach Typen basierend auf ihrer Entropie zu
 klassifizieren.
 
-## Forschungsstand
+# Forschungsstand
 Bisher wurden zwar schon Markov-Prozesse für die Modellierung von Wirtschaften
 verwendet, allerdings wurde dabei nicht auf die Entropie im oben beschriebenen
 Sinne geachtet [@barde2020macroeconomic;@Kostoska2020absorbingmc]. Genauso wurde
@@ -52,23 +58,31 @@ Wirtschaft bezogen [@Rahman2022mccharacteristics].
 # Zeitplan und Vorgehen
 - **Recherche** *1 Monat* - Einlesen in das Themengebiet
 - **Planung** *1 Monat* - Konzeptionierung des Modells und der Versuche
-- **Framework** *2 Monate* - Programmierung eines Simulation Frameworks für die
-  Markov-Prozess-Analyse
+- **Framework** *2 Monate* - Programmierung der Simulation bzw. des
+  Analyse-Frameworks für die Markov-Prozess-Analyse
 - **Modellierung** *2 Wochen* - Genaue Konfiguration/Eingabe der Parameter des
   Modells
-- **Analyse** *1 Woche* - Untersuchung des Modells i.e. Spectral Analysis,
+- **Simulation** *1 Woche* - Untersuchung des Modells i.e. Spectral Analysis,
   Finden der stabilen Konfiguration
-- **Manipulation** *2 Wochen* - Eingreifen in die Simulation und Analyse der
+- **Manipulation** *3 Wochen* - Eingreifen in die Simulation und Analyse der
   Entropie
 - **Interpretation** *2 Wochen* - Zurückführen der Ergebnisse auf die Wirtschaft
-- **Schriftliche Arbeit** *2 Monate* - Ausformulieren der schriftlichen Arbeit
+- **Schriftliche Arbeit** *6 Wochen* - Ausformulieren der schriftlichen Arbeit
 
-<!-- TODO: Methodisches Vorgehen -->
-# Ressourcen
-Durch die abstrakt Natur der Fragestellung wird ausschließlich Rechenleistung
-benötigt. Diese steht in einem ausreichendem Maße bereits zur Verfügung. Es
-entstehen also keine Kosten.
-<!-- TODO: Rudimentäre Gliederung -->
+# Methodisches Vorgehen
+## Technologien
+Für die Programmierung wird geplant die Sprache Python verwendet, sowie
+branchenübliche Tools wie z.B. Git, Jupyter oder Docker.
+
+## Quellen
+Für die Literaturrecherche werden ausschließlich frei verfügbare Quellen i.e.
+öffentlich zugängliche Publikationen und Dokumentationen verwendet.
+
+## Ressourcen
+Durch die Natur der Fragestellung wird zur Datenerhebung Rechenleistung
+benötigt. Diese steht bereits in einem ausreichendem Maße bereits zur Verfügung.
+Es entstehen also keine Kosten.
+
 # Mögliche Probleme
 - **Modellierung** Wirtschaftssysteme erfüllen die Markov-Eigenschaft nicht i.e.
   lassen sich nicht so Weise modellieren.
