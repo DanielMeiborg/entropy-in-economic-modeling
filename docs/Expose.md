@@ -2,14 +2,16 @@
 title: Exposé SIA-Arbeit
 subtitle: ENTROPIE EINES WIRTSCHAFTSSYSTEMS
 author: Daniel Meiborg
+date: \today
 bibliography: main.bib
 csl: ieee-with-url.csl
 link-citations: true
 documentclass: article
-header-includes: \usepackage[a4paper, top=0.5cm, left=1cm, right=1cm, bottom=0.5cm]{geometry}
+font_size: 12pt
+# header-includes: \usepackage[a4paper, top=0.5cm, left=1cm, right=1cm, bottom=0.5cm]{geometry}
 ---
 
-\pagenumbering{gobble}
+<!-- \pagenumbering{gobble} -->
 
 \maketitle
 
@@ -18,6 +20,7 @@ header-includes: \usepackage[a4paper, top=0.5cm, left=1cm, right=1cm, bottom=0.5
 
 John von Neumann zu Claude Shannon, *Scientific American Vol. 225 No. 3, (1971)*
 
+<!-- TODO: genauer erläutern -->
 # Thema
 *Lassen sich einfache ökonomische Prozesse durch einem Markov-Prozess mit einer
 uniformen stationären Wahrscheinlichkeitsverteilung modellieren und aus der
@@ -46,7 +49,7 @@ Sinne geachtet [@barde2020macroeconomic;@Kostoska2020absorbingmc]. Genauso wurde
 auch das Entropieverhalten von Markov-Prozessen analysiert, aber nicht auf die
 Wirtschaft bezogen [@Rahman2022mccharacteristics].
 
-# Zeitplan
+# Zeitplan und Vorgehen
 - **Recherche** *1 Monat* - Einlesen in das Themengebiet
 - **Planung** *1 Monat* - Konzeptionierung des Modells und der Versuche
 - **Framework** *2 Monate* - Programmierung eines Simulation Frameworks für die
@@ -60,8 +63,14 @@ Wirtschaft bezogen [@Rahman2022mccharacteristics].
 - **Interpretation** *2 Wochen* - Zurückführen der Ergebnisse auf die Wirtschaft
 - **Schriftliche Arbeit** *2 Monate* - Ausformulieren der schriftlichen Arbeit
 
+<!-- TODO: Methodisches Vorgehen -->
+# Ressourcen
+Durch die abstrakt Natur der Fragestellung wird ausschließlich Rechenleistung
+benötigt. Diese steht in einem ausreichendem Maße bereits zur Verfügung. Es
+entstehen also keine Kosten.
+<!-- TODO: Rudimentäre Gliederung -->
 # Mögliche Probleme
-- **Modellierung** Wirtscahftssysteme erfüllen die Markov-Eigenschaft nicht i.e.
+- **Modellierung** Wirtschaftssysteme erfüllen die Markov-Eigenschaft nicht i.e.
   lassen sich nicht so Weise modellieren.
 - **Komplexität** Die benötigte Komplexitätsreduktion macht die Resultate
   unbrauchbar.
