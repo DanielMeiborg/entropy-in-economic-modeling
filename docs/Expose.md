@@ -3,22 +3,19 @@ title: Exposé SIA-Arbeit
 subtitle: ENTROPIE EINES WIRTSCHAFTSSYSTEMS
 author: Daniel Meiborg
 date: \today
-bibliography: main.bib
+bibliography: [./main.bib]
 csl: ieee-with-url.csl
 link-citations: true
 documentclass: article
 font_size: 12pt
-# header-includes: \usepackage[a4paper, top=0.5cm, left=1cm, right=1cm, bottom=0.5cm]{geometry}
 ---
-
-<!-- \pagenumbering{gobble} -->
 
 \maketitle
 
 >*You should call it entropy [...] no one really knows what entropy really is,
 >so in a debate you will always have the advantage.*
 
-John von Neumann zu Claude Shannon, *Scientific American Vol. 225 No. 3, (1971)*
+John von Neumann to Claude Shannon, *Scientific American Vol. 225 No. 3, (1971)*
 
 # Thema
 *Lassen sich einfache ökonomische Prozesse durch einem Markov-Prozess mit einer
@@ -39,7 +36,7 @@ oder verfügbaren Ressourcen basieren, eine zentrale Rolle bei der Modellierung
 spielen.
 
 Wichtig zu beachten ist, dass die genaue Übergangsmatrix des Markov-Prozesses
-nicht direkt festegelegt wird, sondern erst durch die Simulation mit im Modell
+nicht direkt festgelegt wird, sondern erst durch die Simulation mit im Modell
 bestimmten Regeln bestimmt wird.
 
 # Motivation
@@ -89,11 +86,13 @@ benötigt. Diese steht bereits in einem ausreichendem Maße bereits zur Verfügu
 Es entstehen also keine Kosten.
 
 # Mögliche Probleme
-- **Modellierung** Wirtschaftssysteme erfüllen die Markov-Eigenschaft nicht i.e.
-  lassen sich nicht so Weise modellieren.
-- **Komplexität** Die benötigte Komplexitätsreduktion macht die Resultate
-  unbrauchbar.
-- **Speichereskalation** Durch zu viele Parameter wächst der Speicherbedarf
-  unkontrolliert.
+**Modellierung** Wirtschaftssysteme erfüllen die Markov-Eigenschaft nicht i.e.
+lassen sich nicht so Weise modellieren.
+
+**Komplexität** Die benötigte Komplexitätsreduktion macht die Resultate
+unbrauchbar.
+
+**Speichereskalation** Durch zu viele Parameter wächst der Speicherbedarf
+unkontrolliert.
 
 # Quellen
