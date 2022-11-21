@@ -7,5 +7,3 @@ edition = "2021"
 
 [dependencies]
 ndarray = "0.15.6"
-petgraph = "0.6.2"
-uuid = "1.2.2"
