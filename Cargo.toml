@@ -7,10 +7,5 @@ edition = "2021"
 
 [dependencies]
 ndarray = "0.15.6"
-plotters = "0.3.4"
-rand = "0.8.5"
+ordered-float = "3.4.0"
 rayon = "1.5"
-
-[dependencies.uuid]
-version = "1.2.2"
-features = ["v4"]

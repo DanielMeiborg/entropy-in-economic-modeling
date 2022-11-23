@@ -1,31 +1,42 @@
-use std::collections::HashMap;
 use rayon::prelude::*;
+use std::collections::HashMap;
 
 mod simulation;
 use simulation::*;
+
+mod utils;
+use utils::*;
 
 fn main() {
     let resources = vec![Resource {
         name: "money".to_string(),
         description: "In dollars".to_string(),
-        capacity: Capacity::Limited(Amount::Float(30.)),
-        capacity_per_entity: CapacityPerEntity::Unlimited,
+        capacity: Capacity::Limited(30.),
+        capacity_per_entity: Capacity::Unlimited,
     }];
 
-    let initial_state = vec![
-        Entity {
-            name: "A".to_string(),
-            resources: HashMap::from([("money".to_string(), Amount::Float(1.))]),
-        },
-        Entity {
-            name: "B".to_string(),
-            resources: HashMap::from([("money".to_string(), Amount::Float(3.))]),
-        },
-        Entity {
-            name: "C".to_string(),
-            resources: HashMap::from([("money".to_string(), Amount::Float(6.))]),
-        },
-    ];
+    let data = Data {
+        entities: HashMap::from([
+            (
+                "A".to_string(),
+                Entity {
+                    resources: HashMap::from([("money".to_string(), 1.)]),
+                },
+            ),
+            (
+                "B".to_string(),
+                Entity {
+                    resources: HashMap::from([("money".to_string(), 3.)]),
+                },
+            ),
+            (
+                "C".to_string(),
+                Entity {
+                    resources: HashMap::from([("money".to_string(), 3.)]),
+                },
+            ),
+        ]),
+    };
 
     let rules = vec![
         Box::new(Rule {
@@ -33,40 +44,51 @@ fn main() {
             description: "Richer one gives 2 dollars to poorer one".to_string(),
             condition: |state: &State| {
                 let mut money = Vec::new();
-                for entity in &state.entities {
+                for (_, entity) in &state.data.entities {
                     money.push(entity.resources.get("money").unwrap());
                 }
                 return money.par_iter().any(|&x| x == money[0]);
             },
             probability: 0.3,
             actions: |state: &State| {
-                let mut money: Vec<Amount> = Vec::new();
-                for entity in &state.entities {
-                    money.push(entity.resources.get("money").unwrap().clone());
+                let mut max_money = 0.;
+                let mut richest_entity_name = "".to_string();
+                for (name, entity) in &state.data.entities {
+                    let money = entity.resources.get("money").unwrap();
+                    if money > &max_money {
+                        max_money = *money;
+                        richest_entity_name = name.clone();
+                    }
                 }
-                let max_index =  money
-                    .par_iter()
-                    .position_any(|x| *x == *money.par_iter().max().unwrap())
-                    .unwrap();
-                let min_index = money
-                    .par_iter()
-                    .position_any(|x| *x == *money.par_iter().min().unwrap())
-                    .unwrap();
 
-                let current_amount = state.entities[max_index].resources.get("money").unwrap();
+                let mut min_money = 0.;
+                let mut poorest_entity_name = "".to_string();
+                for (name, entity) in &state.data.entities {
+                    let money = entity.resources.get("money").unwrap();
+                    if money > &min_money {
+                        min_money = *money;
+                        poorest_entity_name = name.clone();
+                    }
+                }
 
                 vec![
                     Action {
                         name: "Get".to_string(),
                         resource: "money".to_string(),
-                        entities: vec![state.entities[min_index].name.clone()],
-                        new_amount: current_amount.clone() + Amount::Float(1.),
+                        entities: vec![],
+                        new_amount: get_resource(
+                            &get_entity(&state, &richest_entity_name),
+                            &"money".to_string(),
+                        ) + 1.,
                     },
                     Action {
                         name: "Give".to_string(),
                         resource: "money".to_string(),
-                        entities: vec![state.entities[max_index].name.clone()],
-                        new_amount: current_amount.clone() - Amount::Float(1.),
+                        entities: vec![richest_entity_name.clone()],
+                        new_amount: get_resource(
+                            &get_entity(&state, &poorest_entity_name),
+                            &"money".to_string(),
+                        ) - 1.,
                     },
                 ]
             },
@@ -75,9 +97,9 @@ fn main() {
             name: "Capitalism".to_string(),
             description: "If somebody has 4 or more dollar, they double their wealth".to_string(),
             condition: |state: &State| {
-                for entity in &state.entities {
-                    let money = entity.resources.get("money").unwrap();
-                    if money >= &Amount::Float(4.) {
+                for (_, entity) in &state.data.entities {
+                    let money = get_resource(entity, &"money".to_string());
+                    if money >= 4. {
                         return true;
                     }
                 }
@@ -86,14 +108,14 @@ fn main() {
             probability: 0.5,
             actions: |state| {
                 let mut actions = Vec::new();
-                for entity in &state.entities {
-                    let money = entity.resources.get("money").unwrap();
-                    if money >= &Amount::Float(4.) {
+                for (name, entity) in &state.data.entities {
+                    let money = get_resource(entity, &"money".to_string());
+                    if money >= 4. {
                         actions.push(Action {
                             name: "Get".to_string(),
                             resource: "money".to_string(),
-                            entities: vec![entity.name.clone()],
-                            new_amount: money.clone() * Amount::Float(2.),
+                            entities: vec![name.clone()],
+                            new_amount: money * 2.,
                         });
                     }
                 }
@@ -102,9 +124,9 @@ fn main() {
         }),
     ];
 
-    let mut main = Simulation::new(resources, initial_state, rules);
+    let mut main = Simulation::new(resources, data, rules);
     let mut entropies: Vec<f64> = Vec::new();
-    for t in 1..5 {
+    for t in 1..15 {
         main.next_step();
         println!("Time: {}", t);
         println!("Entropy: {:?}", main.entropy);
@@ -119,8 +141,8 @@ fn main() {
                 "  State {:?}, probability {:?}",
                 state.hash, state.probability
             );
-            for entity in &state.entities {
-                println!("    Entity {:?}", entity.name);
+            for (name, entity) in &state.data.entities {
+                println!("    Entity {:?}", name);
                 for (resource, amount) in &entity.resources {
                     println!("      Resource {:?}: {:?}", resource, amount);
                 }

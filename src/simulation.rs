@@ -1,104 +1,34 @@
-use std::cmp::Ordering;
+use rayon::prelude::*;
 use std::collections::{hash_map::DefaultHasher, HashMap};
 use std::hash::{Hash, Hasher};
-use std::ops::{Add, Mul, Sub};
-use rayon::prelude::*;
 
 // TODO: construct an actual graph from the states and the connecting rules
 
-#[derive(PartialEq, PartialOrd, Clone, Debug)]
-pub enum Amount {
-    Integer(u64),
-    Float(f64),
-}
-
-impl Eq for Amount {}
-
-impl Ord for Amount {
-    fn cmp(&self, other: &Self) -> Ordering {
-        match (self, other) {
-            (Amount::Integer(a), Amount::Integer(b)) => a.cmp(b),
-            (Amount::Float(a), Amount::Float(b)) => a.partial_cmp(b).unwrap(),
-            (Amount::Integer(a), Amount::Float(b)) => (*a as f64).partial_cmp(b).unwrap(),
-            (Amount::Float(a), Amount::Integer(b)) => a.partial_cmp(&(*b as f64)).unwrap(),
-        }
-    }
-}
-
-impl Hash for Amount {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        match self {
-            Amount::Integer(x) => x.hash(state),
-            Amount::Float(x) => x.to_bits().hash(state),
-        }
-    }
-}
-
-impl Add for Amount {
-    type Output = Self;
-
-    fn add(self, other: Self) -> Self {
-        match (self, other) {
-            (Amount::Integer(a), Amount::Integer(b)) => Amount::Integer(a + b),
-            (Amount::Float(a), Amount::Float(b)) => Amount::Float(a + b),
-            (Amount::Integer(_), Amount::Float(_)) => panic!("Cannot add integer to float"),
-            (Amount::Float(_), Amount::Integer(_)) => panic!("Cannot add float to integer"),
-        }
-    }
-}
-
-impl Mul for Amount {
-    type Output = Self;
-
-    fn mul(self, other: Self) -> Self {
-        match (self, other) {
-            (Amount::Integer(a), Amount::Integer(b)) => Amount::Integer(a * b),
-            (Amount::Float(a), Amount::Float(b)) => Amount::Float(a * b),
-            (Amount::Integer(_), Amount::Float(_)) => panic!("Cannot multiply integer by float"),
-            (Amount::Float(_), Amount::Integer(_)) => panic!("Cannot multiply float by integer"),
-        }
-    }
-}
-
-impl Sub for Amount {
-    type Output = Self;
-
-    fn sub(self, other: Self) -> Self {
-        match (self, other) {
-            (Amount::Integer(a), Amount::Integer(b)) => Amount::Integer(a - b),
-            (Amount::Float(a), Amount::Float(b)) => Amount::Float(a - b),
-            (Amount::Integer(_), Amount::Float(_)) => panic!("Cannot subtract integer from float"),
-            (Amount::Float(_), Amount::Integer(_)) => panic!("Cannot subtract float from integer"),
-        }
-    }
+#[derive(PartialEq, Debug, Clone)]
+pub struct Entity {
+    pub resources: HashMap<String, f64>,
 }
 
 #[derive(PartialEq, Clone, Debug)]
-pub struct Entity {
-    pub name: String,
-    pub resources: HashMap<String, Amount>,
+pub struct Data {
+    pub entities: HashMap<String, Entity>,
 }
 
-impl Hash for Entity {
+impl Hash for Data {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.name.hash(state);
-        for pair in &self.resources {
-            pair.hash(state);
+        for (name, entity) in &self.entities {
+            for (resource_name, amount) in &entity.resources {
+                (name, resource_name, amount.to_bits()).hash(state);
+            }
         }
     }
 }
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct State {
-    pub entities: Vec<Entity>,
+    pub data: Data,
     pub hash: u64,
     pub probability: f64,
-}
-
-#[derive(PartialEq, Clone, Debug)]
-pub enum Number {
-    Integer(i64),
-    Float(f64),
 }
 
 #[derive(PartialEq, Clone, Debug)]
@@ -106,7 +36,7 @@ pub struct Action {
     pub name: String,
     pub resource: String,
     pub entities: Vec<String>,
-    pub new_amount: Amount,
+    pub new_amount: f64,
 }
 
 #[derive(Clone)]
@@ -118,30 +48,18 @@ pub struct Rule {
     pub actions: fn(&State) -> Vec<Action>,
 }
 
-#[derive(PartialEq, Clone, Debug, Hash)]
-pub enum UnlimitedCapacity {
-    Integer,
-    Float,
-}
-
-#[derive(PartialEq, Clone, Debug, Hash)]
+#[derive(PartialEq, Clone, Debug)]
 pub enum Capacity {
-    Limited(Amount),
-    Unlimited(UnlimitedCapacity),
-}
-
-#[derive(PartialEq, Clone, Debug, Hash)]
-pub enum CapacityPerEntity {
-    Limited(Amount),
+    Limited(f64),
     Unlimited,
 }
 
-#[derive(PartialEq, Clone, Debug, Hash)]
+#[derive(PartialEq, Clone, Debug)]
 pub struct Resource {
     pub name: String,
     pub description: String,
     pub capacity: Capacity,
-    pub capacity_per_entity: CapacityPerEntity,
+    pub capacity_per_entity: Capacity,
 }
 
 #[derive(Clone)]
@@ -156,15 +74,11 @@ pub struct Simulation {
 
 impl Simulation {
     // TODO: Implement checks for input parameters
-    pub fn new(
-        resources: Vec<Resource>,
-        entities: Vec<Entity>,
-        rules: Vec<Box<Rule>>,
-    ) -> Simulation {
+    pub fn new(resources: Vec<Resource>, data: Data, rules: Vec<Box<Rule>>) -> Simulation {
         let mut hasher = DefaultHasher::new();
-        entities.hash(&mut hasher);
+        data.hash(&mut hasher);
         let initial_state = Box::new(State {
-            entities,
+            data,
             hash: hasher.finish(),
             probability: 1.0,
         });
@@ -189,7 +103,7 @@ impl Simulation {
         next_reachable_states: &mut Vec<Box<State>>,
     ) {
         let mut hasher = DefaultHasher::new();
-        new_state.entities.hash(&mut hasher);
+        new_state.data.hash(&mut hasher);
         new_state.hash = hasher.finish();
         match next_reachable_states
             .par_iter()
@@ -207,47 +121,19 @@ impl Simulation {
     fn check_resources(&self, new_state: &Box<State>) {
         for resource in &self.resources {
             match &resource.capacity {
-                Capacity::Limited(amount) => match amount {
-                    Amount::Integer(limit) => {
-                        let mut total_amount: u64 = 0;
-                        for entity in &new_state.entities {
-                            let entity_amount =
-                                entity.resources.get(&resource.name).unwrap();
-                            match entity_amount {
-                                Amount::Integer(amount) => {
-                                    total_amount += amount;
-                                }
-                                Amount::Float(_) => {
-                                    panic!("Cannot combine Float amount with Integer resource in entity");
-                                }
-                            }
-                            if total_amount > *limit {
-                                panic!("Resource limit exceeded for resource {resource_name}",
-                                 resource_name = resource.name);
-                            }
+                Capacity::Limited(limit) => {
+                    let mut total_amount: f64 = 0.;
+                    for (_, entity) in &new_state.data.entities {
+                        total_amount += entity.resources.get(&resource.name).unwrap();
+                        if total_amount > *limit {
+                            panic!(
+                                "Resource limit exceeded for resource {resource_name}",
+                                resource_name = resource.name
+                            );
                         }
                     }
-                    Amount::Float(limit) => {
-                        let mut total_amount: f64 = 0.;
-                        for entity in &new_state.entities {
-                            let entity_amount =
-                                entity.resources.get(&resource.name).unwrap();
-                            match entity_amount {
-                                Amount::Integer(_) => {
-                                    panic!("Cannot combine Integer amount with Float resource in entity");
-                                }
-                                Amount::Float(amount) => {
-                                    total_amount += amount;
-                                }
-                            }
-                            if total_amount > *limit {
-                                panic!("Resource limit exceeded for resource {resource_name}",
-                                 resource_name = resource.name);
-                            }
-                        }
-                    }
-                },
-                Capacity::Unlimited(_) => continue,
+                }
+                Capacity::Unlimited => continue,
             }
         }
     }
@@ -265,12 +151,13 @@ impl Simulation {
                     let actions = (rule.actions)(state);
                     for action in actions {
                         for entity_name in action.entities {
-                            let mut entity = new_state
+                            new_state
+                                .data
                                 .entities
-                                .par_iter()
-                                .find_any(|x| x.name == entity_name)
+                                .get_mut(&entity_name)
                                 .unwrap()
-                                .clone();
+                                .resources
+                                .insert(action.resource.clone(), action.new_amount.clone());
 
                             let capacity_per_entity = &self
                                 .resources
@@ -280,9 +167,6 @@ impl Simulation {
                                 .capacity_per_entity;
 
                             // TODO: implement maximum capacity per entity
-                            entity
-                                .resources
-                                .insert(action.resource.clone(), action.new_amount.clone());
                         }
                     }
 
