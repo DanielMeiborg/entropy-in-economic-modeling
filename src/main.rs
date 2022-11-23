@@ -8,12 +8,14 @@ mod utils;
 use utils::*;
 
 fn main() {
-    let resources = vec![Resource {
-        name: "money".to_string(),
-        description: "In dollars".to_string(),
-        capacity: Capacity::Limited(30.),
-        capacity_per_entity: Capacity::Unlimited,
-    }];
+    let resources = HashMap::from([(
+        "money".to_string(),
+        Resource {
+            description: "In dollars".to_string(),
+            capacity: Capacity::Unlimited,
+            capacity_per_entity: Capacity::Limited(100.),
+        },
+    )]);
 
     let data = Data {
         entities: HashMap::from([
@@ -32,7 +34,7 @@ fn main() {
             (
                 "C".to_string(),
                 Entity {
-                    resources: HashMap::from([("money".to_string(), 3.)]),
+                    resources: HashMap::from([("money".to_string(), 10.)]),
                 },
             ),
         ]),
@@ -52,7 +54,7 @@ fn main() {
             probability: 0.3,
             actions: |state: &State| {
                 let mut max_money = 0.;
-                let mut richest_entity_name = "".to_string();
+                let mut richest_entity_name = "C".to_string();
                 for (name, entity) in &state.data.entities {
                     let money = entity.resources.get("money").unwrap();
                     if money > &max_money {
@@ -62,7 +64,7 @@ fn main() {
                 }
 
                 let mut min_money = 0.;
-                let mut poorest_entity_name = "".to_string();
+                let mut poorest_entity_name = "A".to_string();
                 for (name, entity) in &state.data.entities {
                     let money = entity.resources.get("money").unwrap();
                     if money > &min_money {
@@ -99,7 +101,7 @@ fn main() {
             condition: |state: &State| {
                 for (_, entity) in &state.data.entities {
                     let money = get_resource(entity, &"money".to_string());
-                    if money >= 4. {
+                    if money >= 4. && money < 50. {
                         return true;
                     }
                 }
@@ -110,7 +112,7 @@ fn main() {
                 let mut actions = Vec::new();
                 for (name, entity) in &state.data.entities {
                     let money = get_resource(entity, &"money".to_string());
-                    if money >= 4. {
+                    if money >= 4. && money < 50. {
                         actions.push(Action {
                             name: "Get".to_string(),
                             resource: "money".to_string(),
@@ -126,7 +128,7 @@ fn main() {
 
     let mut main = Simulation::new(resources, data, rules);
     let mut entropies: Vec<f64> = Vec::new();
-    for t in 1..15 {
+    for t in 1..100 {
         main.next_step();
         println!("Time: {}", t);
         println!("Entropy: {:?}", main.entropy);
@@ -135,20 +137,22 @@ fn main() {
             main.reachable_states.len()
         );
         entropies.push(main.entropy);
-        println!("Reachable states:");
-        for state in &main.reachable_states {
-            println!(
-                "  State {:?}, probability {:?}",
-                state.hash, state.probability
-            );
-            for (name, entity) in &state.data.entities {
-                println!("    Entity {:?}", name);
-                for (resource, amount) in &entity.resources {
-                    println!("      Resource {:?}: {:?}", resource, amount);
-                }
-            }
-            println!("");
-        }
+        // {
+        //     println!("Reachable states:");
+        //     for state in &main.reachable_states {
+        //         println!(
+        //             "  State {:?}, probability {:?}",
+        //             state.hash, state.probability
+        //         );
+        //         for (name, entity) in &state.data.entities {
+        //             println!("    Entity {:?}", name);
+        //             for (resource, amount) in &entity.resources {
+        //                 println!("      Resource {:?}: {:?}", resource, amount);
+        //             }
+        //         }
+        //         println!("");
+        //     }
+        // }
         println!("================================================");
     }
     println!("Entropies: {:?}", entropies);
@@ -159,4 +163,10 @@ fn main() {
             .map(|w| w[1] / w[0])
             .collect::<Vec<f64>>()
     );
+    let probability_distribution = main
+        .reachable_states
+        .iter()
+        .map(|state| state.probability)
+        .collect::<Vec<f64>>();
+    println!("Probability distribution: {:?}", probability_distribution);
 }

@@ -56,7 +56,6 @@ pub enum Capacity {
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct Resource {
-    pub name: String,
     pub description: String,
     pub capacity: Capacity,
     pub capacity_per_entity: Capacity,
@@ -64,7 +63,7 @@ pub struct Resource {
 
 #[derive(Clone)]
 pub struct Simulation {
-    pub resources: Vec<Resource>,
+    pub resources: HashMap<String, Resource>,
     pub initial_state: Box<State>,
     pub reachable_states: Vec<Box<State>>,
     pub rules: Vec<Box<Rule>>,
@@ -74,7 +73,11 @@ pub struct Simulation {
 
 impl Simulation {
     // TODO: Implement checks for input parameters
-    pub fn new(resources: Vec<Resource>, data: Data, rules: Vec<Box<Rule>>) -> Simulation {
+    pub fn new(
+        resources: HashMap<String, Resource>,
+        data: Data,
+        rules: Vec<Box<Rule>>,
+    ) -> Simulation {
         let mut hasher = DefaultHasher::new();
         data.hash(&mut hasher);
         let initial_state = Box::new(State {
@@ -119,16 +122,16 @@ impl Simulation {
     }
 
     fn check_resources(&self, new_state: &Box<State>) {
-        for resource in &self.resources {
+        for (resource_name, resource) in &self.resources {
             match &resource.capacity {
                 Capacity::Limited(limit) => {
                     let mut total_amount: f64 = 0.;
                     for (_, entity) in &new_state.data.entities {
-                        total_amount += entity.resources.get(&resource.name).unwrap();
+                        total_amount += entity.resources.get(resource_name).unwrap();
                         if total_amount > *limit {
                             panic!(
                                 "Resource limit exceeded for resource {resource_name}",
-                                resource_name = resource.name
+                                resource_name = resource_name
                             );
                         }
                     }
@@ -161,12 +164,21 @@ impl Simulation {
 
                             let capacity_per_entity = &self
                                 .resources
-                                .iter()
-                                .find(|&x| x.name == action.resource)
+                                .get(&action.resource)
                                 .unwrap()
                                 .capacity_per_entity;
 
-                            // TODO: implement maximum capacity per entity
+                            match capacity_per_entity {
+                                Capacity::Limited(limit) => {
+                                    if action.new_amount > *limit {
+                                        panic!(
+                                            "Resource limit per entity exceeded for resource {resource_name}",
+                                            resource_name = action.resource
+                                        );
+                                    }
+                                }
+                                Capacity::Unlimited => continue,
+                            }
                         }
                     }
 
