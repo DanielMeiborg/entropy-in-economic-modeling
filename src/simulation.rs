@@ -271,7 +271,61 @@ impl Simulation {
         Box::new(new_state)
     }
 
-    // TODO: Split up
+    fn apply_rules_to_state(
+        &self,
+        new_cache: &mut Cache,
+        state_hash: &u64,
+        state: &State,
+    ) -> (f64, f64, HashMap<u64, Box<State>>) {
+        let mut new_base_state_probability = state.probability;
+        let mut applying_rules_probability_sum = 0.;
+        let mut current_reachable_states: HashMap<u64, Box<State>> = HashMap::new();
+
+        for (rule_name, rule) in &self.rules {
+            let rule_applies =
+                Simulation::check_rule_applies(new_cache, rule_name, rule, state_hash, state);
+            if rule_applies && rule.probability > 0. {
+                new_base_state_probability *= 1. - rule.probability;
+                applying_rules_probability_sum += rule.probability;
+                let new_state = self.get_new_state(new_cache, state_hash, state, rule_name, rule);
+                Simulation::append_reachable_state(new_state, &mut current_reachable_states);
+            }
+        }
+
+        if new_base_state_probability > 0. {
+            let mut new_base_state = state.clone();
+            new_base_state.probability = new_base_state_probability;
+            Simulation::append_reachable_state(
+                Box::new(new_base_state),
+                &mut current_reachable_states,
+            );
+        }
+
+        (
+            new_base_state_probability,
+            applying_rules_probability_sum,
+            current_reachable_states,
+        )
+    }
+
+    fn set_probabilities_for_current_reachable_states(
+        current_reachable_states: &mut HashMap<u64, Box<State>>,
+        state_hash: &u64,
+        state: &State,
+        new_base_state_probability: f64,
+        applying_rules_probability_sum: f64,
+    ) {
+        current_reachable_states.par_iter_mut().for_each(
+            |(new_reachable_state_hash, new_reachable_state)| {
+                if new_reachable_state_hash != state_hash {
+                    new_reachable_state.probability *= (state.probability
+                        - new_base_state_probability)
+                        / applying_rules_probability_sum;
+                }
+            },
+        );
+    }
+
     // TODO: What happens with new_cache?
     // TODO: Multithreading
     // TODO: The reverse rules for the doubly statistical property
@@ -279,58 +333,20 @@ impl Simulation {
         let mut next_reachable_states: HashMap<u64, Box<State>> = HashMap::new();
         let mut new_cache = self.cache.clone();
         for (state_hash, state) in &self.reachable_states {
-            let mut current_reachable_states: HashMap<u64, Box<State>> = HashMap::new();
-            let mut new_base_state_probability = state.probability;
-            let mut applying_rules_probability_sum = 0.;
-            for (rule_name, rule) in &self.rules {
-                let rule_applies = Simulation::check_rule_applies(
-                    &mut new_cache,
-                    rule_name,
-                    rule,
-                    state_hash,
-                    state,
-                );
-                if rule_applies && rule.probability > 0. {
-                    new_base_state_probability *= 1. - rule.probability;
-                    applying_rules_probability_sum += rule.probability;
-                    let new_state =
-                        self.get_new_state(&mut new_cache, state_hash, state, rule_name, rule);
-                    Simulation::append_reachable_state(new_state, &mut current_reachable_states);
-                }
-            }
-            if new_base_state_probability > 0. {
-                let mut new_base_state = state.clone();
-                new_base_state.probability = new_base_state_probability;
-                Simulation::append_reachable_state(new_base_state, &mut current_reachable_states);
-            }
-            if new_base_state_probability < 0. {
-                panic!("Probability of base state is negative");
-            }
+            let (
+                new_base_state_probability,
+                applying_rules_probability_sum,
+                mut current_reachable_states,
+            ) = self.apply_rules_to_state(&mut new_cache, state_hash, state);
 
-            // let rule_probability_sum: f64 = self.rules.values().map(|rule| rule.probability).sum();
-
-            current_reachable_states.par_iter_mut().for_each(
-                |(new_reachable_state_hash, new_reachable_state)| {
-                    if new_reachable_state_hash != state_hash {
-                        new_reachable_state.probability *= (state.probability
-                            - new_base_state_probability)
-                            / applying_rules_probability_sum;
-                    }
-                },
+            Simulation::set_probabilities_for_current_reachable_states(
+                &mut current_reachable_states,
+                state_hash,
+                state,
+                new_base_state_probability,
+                applying_rules_probability_sum,
             );
 
-            let state_probability_sum = current_reachable_states
-                .values()
-                .fold(0., |sum, state| sum + state.probability);
-
-            if !(0.9999999 * state.probability < state_probability_sum
-                && state_probability_sum < 1.0000001 * state.probability)
-            {
-                panic!(
-                    "Probability sum {:?} is not {:?}",
-                    state_probability_sum, state.probability
-                );
-            }
             current_reachable_states.iter().for_each(|(_, new_state)| {
                 Simulation::append_reachable_state(new_state.clone(), &mut next_reachable_states)
             });
