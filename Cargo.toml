@@ -9,4 +9,5 @@ edition = "2021"
 hashbrown = { version = "0.13.1", features = ["rayon"] }
 ndarray = "0.15.6"
 ordered-float = "3.4.0"
+petgraph = "0.6.2"
 rayon = "1.5"

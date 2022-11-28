@@ -1,8 +1,11 @@
-use hashbrown::HashMap;
-use rayon::prelude::*;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::sync::mpsc::{self, Sender};
+
+use hashbrown::HashMap;
+use petgraph::graph::NodeIndex;
+use petgraph::Graph;
+use rayon::prelude::*;
 
 #[derive(PartialEq, Debug, Clone)]
 pub struct Entity {
@@ -46,7 +49,7 @@ pub struct State {
 pub struct Action {
     pub name: String,
     pub resource: String,
-    pub entities: Vec<String>,
+    pub entity: String,
     pub new_amount: f64,
 }
 
@@ -244,33 +247,32 @@ impl Simulation {
         };
 
         let actions = (rule.actions)(state);
+        // println!("\nRule: {}", rule_name);
         for action in actions {
-            for entity_name in action.entities {
-                new_state
-                    .data
-                    .entities
-                    .get_mut(&entity_name)
-                    .unwrap()
-                    .resources
-                    .insert(action.resource.clone(), action.new_amount);
+            new_state
+                .data
+                .entities
+                .get_mut(&action.entity)
+                .unwrap()
+                .resources
+                .insert(action.resource.clone(), action.new_amount);
 
-                let capacity_per_entity = &self
-                    .resources
-                    .get(&action.resource)
-                    .unwrap()
-                    .capacity_per_entity;
+            let capacity_per_entity = &self
+                .resources
+                .get(&action.resource)
+                .unwrap()
+                .capacity_per_entity;
 
-                match capacity_per_entity {
-                    Capacity::Limited(limit) => {
-                        if action.new_amount > *limit {
-                            panic!(
-                                "Resource limit per entity exceeded for resource {resource_name}",
-                                resource_name = action.resource
-                            );
-                        }
+            match capacity_per_entity {
+                Capacity::Limited(limit) => {
+                    if action.new_amount > *limit {
+                        panic!(
+                            "Resource limit per entity exceeded for resource {resource_name}",
+                            resource_name = action.resource
+                        );
                     }
-                    Capacity::Unlimited => {}
                 }
+                Capacity::Unlimited => {}
             }
         }
 
@@ -348,7 +350,6 @@ impl Simulation {
         );
     }
 
-    // TODO: construct an actual graph from the states and the connecting rules
     // TODO: The reverse rules for the doubly statistical property
     fn get_next_reachable_states(&mut self) -> HashMap<u64, Box<State>> {
         let (cache_tx, cache_rx) = mpsc::channel();
@@ -410,5 +411,26 @@ impl Simulation {
             .map(|state| state.probability * -state.probability.log2())
             .sum();
         entropy
+    }
+
+    // TODO: note that this works sort of one step slower than the simulation, because cache!=reachable_states, see if lets below
+    pub fn get_graph_from_cache(&self) -> Graph<Box<State>, String> {
+        let mut graph = Graph::<Box<State>, String>::new();
+        let mut state_nodes: HashMap<u64, NodeIndex> = HashMap::new();
+        for (state_hash, state) in &self.reachable_states {
+            let node_index = graph.add_node(state.clone());
+            state_nodes.insert(*state_hash, node_index);
+        }
+        for (state_hash, state_node) in &state_nodes {
+            for (rule_name, rule_cache) in &self.cache.rules {
+                if rule_cache.condition.get(state_hash).is_some() {
+                    if let Some(new_state_hash) = rule_cache.actions.get(state_hash) {
+                        let new_state_node = state_nodes.get(new_state_hash).unwrap();
+                        graph.add_edge(*state_node, *new_state_node, rule_name.clone());
+                    }
+                }
+            }
+        }
+        graph
     }
 }
