@@ -2,8 +2,7 @@ use hashbrown::HashMap;
 use rayon::prelude::*;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
-
-// TODO: construct an actual graph from the states and the connecting rules
+use std::sync::mpsc::{self, Sender};
 
 #[derive(PartialEq, Debug, Clone)]
 pub struct Entity {
@@ -83,7 +82,6 @@ struct Cache {
     pub rules: HashMap<String, RuleCache>,
 }
 
-// TODO: why box?
 #[derive(Clone)]
 pub struct Simulation {
     pub resources: HashMap<String, Resource>,
@@ -96,7 +94,6 @@ pub struct Simulation {
 }
 
 impl Simulation {
-    // TODO: Implement checks for input parameters
     pub fn new(
         resources: HashMap<String, Resource>,
         data: Data,
@@ -194,18 +191,29 @@ impl Simulation {
     }
 
     fn check_rule_applies(
-        cache: &mut Cache,
+        &self,
+        cache_tx: &Sender<Cache>,
         rule_name: &String,
         rule: &Rule,
         state_hash: &u64,
         state: &State,
     ) -> bool {
-        let rule_cache: &mut RuleCache = cache.rules.get_mut(rule_name).unwrap();
+        let rule_cache = self.cache.rules.get(rule_name).unwrap();
         match rule_cache.condition.get(state_hash) {
             Some(result) => *result,
             None => {
                 let result = (rule.condition)(state);
-                rule_cache.condition.insert(*state_hash, result);
+                cache_tx
+                    .send(Cache {
+                        rules: HashMap::from([(
+                            rule_name.clone(),
+                            RuleCache {
+                                condition: HashMap::from([(*state_hash, result)]),
+                                actions: HashMap::new(),
+                            },
+                        )]),
+                    })
+                    .unwrap();
                 result
             }
         }
@@ -213,13 +221,13 @@ impl Simulation {
 
     fn get_new_state(
         &self,
-        cache: &mut Cache,
+        cache_tx: &Sender<Cache>,
         state_hash: &u64,
         state: &State,
         rule_name: &String,
         rule: &Rule,
     ) -> Box<State> {
-        let rule_cache: &mut RuleCache = cache.rules.get_mut(rule_name).unwrap();
+        let rule_cache = self.cache.rules.get(rule_name).unwrap();
 
         if let Some(state_hash) = rule_cache.actions.get(state_hash) {
             if let Some(new_state) = self.reachable_states.get(state_hash) {
@@ -270,14 +278,24 @@ impl Simulation {
 
         let mut hasher = DefaultHasher::new();
         new_state.data.hash(&mut hasher);
-        rule_cache.actions.insert(*state_hash, hasher.finish());
+        cache_tx
+            .send(Cache {
+                rules: HashMap::from([(
+                    rule_name.clone(),
+                    RuleCache {
+                        condition: HashMap::new(),
+                        actions: HashMap::from([(*state_hash, hasher.finish())]),
+                    },
+                )]),
+            })
+            .unwrap();
 
         Box::new(new_state)
     }
 
     fn apply_rules_to_state(
         &self,
-        new_cache: &mut Cache,
+        cache_tx: Sender<Cache>,
         state_hash: &u64,
         state: &State,
     ) -> (f64, f64, HashMap<u64, Box<State>>) {
@@ -287,11 +305,11 @@ impl Simulation {
 
         for (rule_name, rule) in &self.rules {
             let rule_applies =
-                Simulation::check_rule_applies(new_cache, rule_name, rule, state_hash, state);
+                self.check_rule_applies(&cache_tx, rule_name, rule, state_hash, state);
             if rule_applies && rule.probability > 0. {
                 new_base_state_probability *= 1. - rule.probability;
                 applying_rules_probability_sum += rule.probability;
-                let new_state = self.get_new_state(new_cache, state_hash, state, rule_name, rule);
+                let new_state = self.get_new_state(&cache_tx, state_hash, state, rule_name, rule);
                 Simulation::append_reachable_state(new_state, &mut current_reachable_states);
             }
         }
@@ -330,30 +348,50 @@ impl Simulation {
         );
     }
 
-    // TODO: Multithreading
+    // TODO: construct an actual graph from the states and the connecting rules
     // TODO: The reverse rules for the doubly statistical property
     fn get_next_reachable_states(&mut self) -> HashMap<u64, Box<State>> {
+        let (cache_tx, cache_rx) = mpsc::channel();
+
+        let all_current_reachable_states: Vec<HashMap<u64, Box<State>>> = self
+            .reachable_states
+            .par_iter()
+            .map_with(cache_tx, |cache_tx, (state_hash, state)| {
+                let (
+                    new_base_state_probability,
+                    applying_rules_probability_sum,
+                    mut current_reachable_states,
+                ) = self.apply_rules_to_state(cache_tx.clone(), state_hash, state);
+
+                Simulation::set_probabilities_for_current_reachable_states(
+                    &mut current_reachable_states,
+                    state_hash,
+                    state,
+                    new_base_state_probability,
+                    applying_rules_probability_sum,
+                );
+
+                current_reachable_states
+            })
+            .collect();
+
         let mut next_reachable_states: HashMap<u64, Box<State>> = HashMap::new();
-        let mut new_cache = self.cache.clone();
-        for (state_hash, state) in &self.reachable_states {
-            let (
-                new_base_state_probability,
-                applying_rules_probability_sum,
-                mut current_reachable_states,
-            ) = self.apply_rules_to_state(&mut new_cache, state_hash, state);
-
-            Simulation::set_probabilities_for_current_reachable_states(
-                &mut current_reachable_states,
-                state_hash,
-                state,
-                new_base_state_probability,
-                applying_rules_probability_sum,
-            );
-
-            current_reachable_states.iter().for_each(|(_, new_state)| {
-                Simulation::append_reachable_state(new_state.clone(), &mut next_reachable_states)
+        all_current_reachable_states
+            .iter()
+            .for_each(|current_reachable_states| {
+                current_reachable_states.iter().for_each(|(_, state)| {
+                    Simulation::append_reachable_state(state.clone(), &mut next_reachable_states);
+                })
             });
+
+        for cache in cache_rx {
+            for (rule_name, rule_cache) in cache.rules {
+                let own_rule_cache = self.cache.rules.get_mut(&rule_name).unwrap();
+                own_rule_cache.condition.extend(rule_cache.condition);
+                own_rule_cache.actions.extend(rule_cache.actions);
+            }
         }
+
         let probability_sum = next_reachable_states
             .values()
             .fold(0., |sum, state| sum + state.probability);
@@ -362,7 +400,6 @@ impl Simulation {
             panic!("Probability sum {:?} is not 1", probability_sum);
         }
 
-        self.cache = new_cache;
         next_reachable_states
     }
 

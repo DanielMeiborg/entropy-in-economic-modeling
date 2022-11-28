@@ -1,6 +1,6 @@
-use rayon::prelude::*;
 use hashbrown::HashMap;
-
+use rayon::prelude::*;
+use std::time::SystemTime;
 
 mod simulation;
 use simulation::*;
@@ -102,7 +102,7 @@ fn main() {
             "Capitalism".to_string(),
             Box::new(Rule {
                 description:
-                    "If somebody has 4 or more dollars and less than 50, they double their wealth"
+                    "If somebody has 4 or more dollars and enough capacity, they double their wealth"
                         .to_string(),
                 condition: |state: &State| {
                     for entity in state.data.entities.values() {
@@ -135,11 +135,13 @@ fn main() {
 
     let mut main = Simulation::new(resources, data, rules);
     let mut entropies: Vec<f64> = Vec::new();
-    for t in 1..100 {
+    let time = SystemTime::now();
+    for t in 1..10000 {
         main.next_step();
         println!("Time: {}", t);
         entropies.push(main.entropy);
     }
+    let duration = time.elapsed().unwrap();
     println!("================================================");
     println!("Entropies: {:?}", entropies);
     println!("================================================");
@@ -155,5 +157,21 @@ fn main() {
         .max_by(|(_, a), (_, b)| a.probability.partial_cmp(&b.probability).unwrap())
         .unwrap();
     println!("most probable state: {:#?}", most_probable_state);
+    // println!(
+    //     "The probability that all entities have the same amount of money: {}",
+    //     main.reachable_states
+    //         .values()
+    //         .filter(|state| {
+    //             let moneys: Vec<f64> = state
+    //                 .data
+    //                 .entities
+    //                 .values()
+    //                 .map(|entity| get_resource(entity, &"money".to_string()))
+    //                 .collect();
+    //             moneys.iter().filter(|money| *money != &moneys[0]).count() == 0
+    //         })
+    //         .count()
+    // );
+    println!("The simulation took {} seconds", duration.as_secs_f64());
     // println!("Size of simulation: {:?}", std::mem::size_of_val(&main));
 }
