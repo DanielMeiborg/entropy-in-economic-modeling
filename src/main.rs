@@ -1,5 +1,6 @@
 use rayon::prelude::*;
-use std::collections::HashMap;
+use hashbrown::HashMap;
+
 
 mod simulation;
 use simulation::*;
@@ -134,54 +135,25 @@ fn main() {
 
     let mut main = Simulation::new(resources, data, rules);
     let mut entropies: Vec<f64> = Vec::new();
-    for t in 1..1000 {
+    for t in 1..100 {
         main.next_step();
         println!("Time: {}", t);
-        // println!("Entropy: {:?}", main.entropy);
-        // println!(
-        //     "Number of reachable states: {:?}",
-        //     main.reachable_states.len()
-        // );
         entropies.push(main.entropy);
-        // {
-        //     println!("Reachable states:");
-        //     for state in &main.reachable_states {
-        //         println!(
-        //             "  State {:?}, probability {:?}",
-        //             state.hash, state.probability
-        //         );
-        //         for (name, entity) in &state.data.entities {
-        //             println!("    Entity {:?}", name);
-        //             for (resource, amount) in &entity.resources {
-        //                 println!("      Resource {:?}: {:?}", resource, amount);
-        //             }
-        //         }
-        //         println!("");
-        //     }
-        // }
-        // println!("================================================");
     }
     println!("================================================");
     println!("Entropies: {:?}", entropies);
-    // println!(
-    //     "Ratio of each entropy to the previous one: {:?}",
-    //     entropies
-    //         .windows(2)
-    //         .map(|w| w[1] / w[0])
-    //         .collect::<Vec<f64>>()
-    // );
     println!("================================================");
     let probability_distribution = main
         .reachable_states
-        .iter()
+        .par_iter()
         .map(|(_, state)| state.probability)
         .collect::<Vec<f64>>();
     println!("Probability distribution: {:?}", probability_distribution);
     let most_probable_state = main
         .reachable_states
-        .iter()
+        .par_iter()
         .max_by(|(_, a), (_, b)| a.probability.partial_cmp(&b.probability).unwrap())
         .unwrap();
-    println!("most probable state: {:?}", most_probable_state);
+    println!("most probable state: {:#?}", most_probable_state);
     // println!("Size of simulation: {:?}", std::mem::size_of_val(&main));
 }

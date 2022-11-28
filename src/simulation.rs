@@ -1,5 +1,6 @@
+use hashbrown::HashMap;
 use rayon::prelude::*;
-use std::collections::{hash_map::DefaultHasher, HashMap};
+use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 
 // TODO: construct an actual graph from the states and the connecting rules
@@ -222,7 +223,10 @@ impl Simulation {
 
         if let Some(state_hash) = rule_cache.actions.get(state_hash) {
             if let Some(new_state) = self.reachable_states.get(state_hash) {
-                return new_state.clone();
+                return Box::new(State {
+                    data: new_state.data.clone(),
+                    probability: rule.probability,
+                });
             }
         }
 
@@ -326,7 +330,6 @@ impl Simulation {
         );
     }
 
-    // TODO: What happens with new_cache?
     // TODO: Multithreading
     // TODO: The reverse rules for the doubly statistical property
     fn get_next_reachable_states(&mut self) -> HashMap<u64, Box<State>> {
@@ -359,16 +362,16 @@ impl Simulation {
             panic!("Probability sum {:?} is not 1", probability_sum);
         }
 
+        self.cache = new_cache;
         next_reachable_states
     }
 
     fn get_entropy(&self) -> f64 {
-        let mut entropy: f64 = 0.;
-        for state in self.reachable_states.values() {
-            let entropy_add = state.probability * -state.probability.log2();
-
-            entropy += entropy_add;
-        }
+        let entropy = self
+            .reachable_states
+            .par_values()
+            .map(|state| state.probability * -state.probability.log2())
+            .sum();
         entropy
     }
 }
