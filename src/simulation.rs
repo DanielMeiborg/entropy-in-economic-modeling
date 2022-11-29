@@ -39,6 +39,14 @@ impl PartialEq for Data {
 
 impl Eq for Data {}
 
+impl Data {
+    pub fn get_hash(&self) -> u64 {
+        let mut hasher = &mut DefaultHasher::new();
+        self.hash(&mut hasher);
+        hasher.finish()
+    }
+}
+
 #[derive(PartialEq, Clone, Debug)]
 pub struct State {
     pub data: Data,
@@ -57,7 +65,7 @@ pub struct Action {
 pub struct Rule {
     pub description: String,
     pub condition: fn(&State) -> bool,
-    pub probability: f64,
+    pub probability_weight: f64,
     pub actions: fn(&State) -> Vec<Action>,
 }
 
@@ -102,8 +110,7 @@ impl Simulation {
         data: Data,
         rules: HashMap<String, Box<Rule>>,
     ) -> Simulation {
-        let mut hasher = DefaultHasher::new();
-        data.hash(&mut hasher);
+        let initial_state_hash = data.get_hash();
         let initial_state = Box::new(State {
             data,
             probability: 1.0,
@@ -125,7 +132,7 @@ impl Simulation {
         Simulation {
             resources,
             initial_state: initial_state.clone(),
-            reachable_states: HashMap::from([(hasher.finish(), initial_state)]),
+            reachable_states: HashMap::from([(initial_state_hash, initial_state)]),
             rules,
             current_time: 0,
             entropy: 0.,
@@ -143,9 +150,7 @@ impl Simulation {
         new_state: Box<State>,
         next_reachable_states: &mut HashMap<u64, Box<State>>,
     ) {
-        let mut hasher = DefaultHasher::new();
-        new_state.data.hash(&mut hasher);
-        let hash = hasher.finish();
+        let hash = new_state.data.get_hash();
         match next_reachable_states.get_mut(&hash) {
             Some(state) => {
                 state.probability += new_state.probability;
@@ -236,18 +241,17 @@ impl Simulation {
             if let Some(new_state) = self.reachable_states.get(state_hash) {
                 return Box::new(State {
                     data: new_state.data.clone(),
-                    probability: rule.probability,
+                    probability: rule.probability_weight,
                 });
             }
         }
 
         let mut new_state = State {
             data: state.data.clone(),
-            probability: rule.probability,
+            probability: rule.probability_weight,
         };
 
         let actions = (rule.actions)(state);
-        // println!("\nRule: {}", rule_name);
         for action in actions {
             new_state
                 .data
@@ -278,15 +282,14 @@ impl Simulation {
 
         self.check_resources(&new_state);
 
-        let mut hasher = DefaultHasher::new();
-        new_state.data.hash(&mut hasher);
+        let new_state_hash = new_state.data.get_hash();
         cache_tx
             .send(Cache {
                 rules: HashMap::from([(
                     rule_name.clone(),
                     RuleCache {
                         condition: HashMap::new(),
-                        actions: HashMap::from([(*state_hash, hasher.finish())]),
+                        actions: HashMap::from([(*state_hash, new_state_hash)]),
                     },
                 )]),
             })
@@ -302,15 +305,15 @@ impl Simulation {
         state: &State,
     ) -> (f64, f64, HashMap<u64, Box<State>>) {
         let mut new_base_state_probability = state.probability;
-        let mut applying_rules_probability_sum = 0.;
+        let mut applying_rules_probability_weight_sum = 0.;
         let mut current_reachable_states: HashMap<u64, Box<State>> = HashMap::new();
 
         for (rule_name, rule) in &self.rules {
             let rule_applies =
                 self.check_rule_applies(&cache_tx, rule_name, rule, state_hash, state);
-            if rule_applies && rule.probability > 0. {
-                new_base_state_probability *= 1. - rule.probability;
-                applying_rules_probability_sum += rule.probability;
+            if rule_applies && rule.probability_weight > 0. {
+                new_base_state_probability *= 1. - rule.probability_weight;
+                applying_rules_probability_weight_sum += rule.probability_weight;
                 let new_state = self.get_new_state(&cache_tx, state_hash, state, rule_name, rule);
                 Simulation::append_reachable_state(new_state, &mut current_reachable_states);
             }
@@ -327,7 +330,7 @@ impl Simulation {
 
         (
             new_base_state_probability,
-            applying_rules_probability_sum,
+            applying_rules_probability_weight_sum,
             current_reachable_states,
         )
     }
@@ -337,20 +340,20 @@ impl Simulation {
         state_hash: &u64,
         state: &State,
         new_base_state_probability: f64,
-        applying_rules_probability_sum: f64,
+        applying_rules_probability_weight_sum: f64,
     ) {
         current_reachable_states.par_iter_mut().for_each(
             |(new_reachable_state_hash, new_reachable_state)| {
                 if new_reachable_state_hash != state_hash {
                     new_reachable_state.probability *= (state.probability
                         - new_base_state_probability)
-                        / applying_rules_probability_sum;
+                        / applying_rules_probability_weight_sum;
                 }
             },
         );
     }
 
-    // TODO: The reverse rules for the doubly statistical property
+    // TODO: Implement intervention
     fn get_next_reachable_states(&mut self) -> HashMap<u64, Box<State>> {
         let (cache_tx, cache_rx) = mpsc::channel();
 
@@ -360,7 +363,7 @@ impl Simulation {
             .map_with(cache_tx, |cache_tx, (state_hash, state)| {
                 let (
                     new_base_state_probability,
-                    applying_rules_probability_sum,
+                    applying_rules_probability_weight_sum,
                     mut current_reachable_states,
                 ) = self.apply_rules_to_state(cache_tx.clone(), state_hash, state);
 
@@ -369,7 +372,7 @@ impl Simulation {
                     state_hash,
                     state,
                     new_base_state_probability,
-                    applying_rules_probability_sum,
+                    applying_rules_probability_weight_sum,
                 );
 
                 current_reachable_states
@@ -413,7 +416,6 @@ impl Simulation {
         entropy
     }
 
-    // TODO: note that this works sort of one step slower than the simulation, because cache!=reachable_states, see if lets below
     pub fn get_graph_from_cache(&self) -> Graph<Box<State>, String> {
         let mut graph = Graph::<Box<State>, String>::new();
         let mut state_nodes: HashMap<u64, NodeIndex> = HashMap::new();
@@ -433,4 +435,71 @@ impl Simulation {
         }
         graph
     }
+
+    // while one could implement this function, an easier approach for validationg the doubly statistical property is by inserting
+    // the uniform distribution and look at the change or not-change
+    // pub fn get_transition_rate_matrix(&mut self) -> HashMap<u64, HashMap<u64, f64>> {
+    //     let mut transition_rate_matrix: HashMap<u64, HashMap<u64, f64>> = HashMap::new();
+    //     let graph = self.get_graph_from_cache();
+    //     for node_index in graph.node_indices() {
+    //         let mut row: HashMap<u64, f64> = HashMap::new();
+    //         for outgoing_node_index in
+    //             graph.neighbors_directed(node_index, petgraph::Direction::Outgoing)
+    //         {
+    //             let outgoing_state_hash = graph[outgoing_node_index].data.get_hash();
+    //             let transition_rate: f64 = {
+    //                 let current_state_hash = graph[node_index].data.get_hash();
+    //                 let rule_to_outgoing_state = self
+    //                     .cache
+    //                     .rules
+    //                     .par_iter()
+    //                     .find_any(|(_, rule_cache)| {
+    //                         if rule_cache.condition.get(&current_state_hash).is_some() {
+    //                             let new_state_hash =
+    //                                 rule_cache.actions.get(&current_state_hash).unwrap();
+    //                             new_state_hash == &outgoing_state_hash
+    //                         } else {
+    //                             false
+    //                         }
+    //                     })
+    //                     .unwrap()
+    //                     .0;
+    //                 let applying_rules_probability_weight_sum: f64 = graph
+    //                     .neighbors_directed(node_index, petgraph::Direction::Outgoing)
+    //                     .map(|neighbor_node_index| {
+    //                         let connecting_edge =
+    //                             graph.find_edge(node_index, neighbor_node_index).unwrap();
+    //                         let connecting_rule_name = &graph[connecting_edge];
+    //                         let connecting_rule = self.rules.get(connecting_rule_name).unwrap();
+
+    //                         connecting_rule.probability_weight
+    //                     })
+    //                     .sum();
+    //                 let rule_to_outgoing_state_weight = self
+    //                     .rules
+    //                     .get(rule_to_outgoing_state)
+    //                     .unwrap()
+    //                     .probability_weight;
+
+    //                 // There's still stuff to do
+    //             };
+    //             row.insert(outgoing_state_hash, transition_rate);
+    //         }
+    //         let unreachable_node_indices = graph
+    //             .node_indices()
+    //             .filter(|node_index| !row.contains_key(&graph[*node_index].data.get_hash()))
+    //             .collect::<Vec<NodeIndex>>();
+    //         for unreachable_node_index in unreachable_node_indices {
+    //             row.insert(graph[unreachable_node_index].data.get_hash(), 0.);
+    //         }
+    //         transition_rate_matrix.insert(graph[node_index].data.get_hash(), row);
+    //     }
+    //     {
+    //         let transition_rate_matrix_len = transition_rate_matrix.len();
+    //         transition_rate_matrix.par_iter().for_each(|(_, row)| {
+    //             assert_eq!(row.len(), transition_rate_matrix_len);
+    //         });
+    //     }
+    //     transition_rate_matrix
+    // }
 }

@@ -42,6 +42,7 @@ pub fn get_min_index_f64(v: &Vec<f64>) -> usize {
         .unwrap()
 }
 
+#[allow(dead_code)]
 pub fn get_subgraph<N, E>(nodes: Vec<NodeIndex>, graph: &Graph<N, E>) -> Graph<N, E>
 where
     N: Clone + std::cmp::PartialEq,
