@@ -13,6 +13,7 @@ pub struct Entity {
 }
 
 impl Entity {
+    #[allow(dead_code)]
     pub fn get_resource(&self, resource_name: &String) -> f64 {
         *self.resources.get(resource_name).unwrap()
     }
@@ -60,6 +61,7 @@ pub struct State {
 }
 
 impl State {
+    #[allow(dead_code)]
     pub fn get_entity(&self, entity_name: &String) -> Entity {
         self.data.entities.get(entity_name).unwrap().clone()
     }
@@ -366,7 +368,6 @@ impl Simulation {
         );
     }
 
-    // TODO: Implement intervention
     fn get_next_possible_states(&mut self) -> HashMap<u64, Box<State>> {
         let (cache_tx, cache_rx) = mpsc::channel();
 
@@ -429,8 +430,6 @@ impl Simulation {
         entropy
     }
 
-    // TODO: sometimes there are states which are possible once but not later. Do not use possible_states but create a register for states, so rewrite everything
-    // Note: This was not thought possible, but a base_state_probability of 0 does not imply that the simulation is not doubly statistical
     pub fn get_graph_from_cache(&self) -> Graph<Box<State>, String> {
         let mut graph = Graph::<Box<State>, String>::new();
         let mut nodes: HashMap<u64, NodeIndex> = HashMap::new();
@@ -467,7 +466,6 @@ impl Simulation {
             self.initial_state.data.clone(),
             self.rules.clone(),
         );
-        // TODO: this does not work for pure deterministic simulations. use something like hashset
         let mut current_number_of_possible_states = 0;
         while simulation.possible_states.len() != current_number_of_possible_states {
             current_number_of_possible_states = simulation.possible_states.len();
