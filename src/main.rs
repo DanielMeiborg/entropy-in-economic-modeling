@@ -134,7 +134,7 @@ fn main() {
     let time = SystemTime::now();
     let mut current_number_of_states: usize;
     for time in 0..10 {
-        current_number_of_states = simulation.reachable_states.len();
+        current_number_of_states = simulation.possible_states.len();
         simulation.next_step();
         entropies.push(simulation.entropy);
         println!(
@@ -146,7 +146,7 @@ fn main() {
     println!("================================================");
     write("out/entropies.txt", format!("{:?}", &entropies));
     let probability_distribution = simulation
-        .reachable_states
+        .possible_states
         .par_iter()
         .map(|(_, state)| state.probability)
         .collect::<Vec<f64>>();
@@ -156,7 +156,7 @@ fn main() {
     );
 
     let most_probable_state = simulation
-        .reachable_states
+        .possible_states
         .par_iter()
         .max_by(|(_, a), (_, b)| a.probability.partial_cmp(&b.probability).unwrap())
         .unwrap();

@@ -98,7 +98,7 @@ struct Cache {
 pub struct Simulation {
     pub resources: HashMap<String, Resource>,
     pub initial_state: Box<State>,
-    pub reachable_states: HashMap<u64, Box<State>>,
+    pub possible_states: HashMap<u64, Box<State>>,
     pub rules: HashMap<String, Box<Rule>>,
     pub time: u64,
     pub entropy: f64,
@@ -133,7 +133,7 @@ impl Simulation {
         Simulation {
             resources,
             initial_state: initial_state.clone(),
-            reachable_states: HashMap::from([(initial_state_hash, initial_state)]),
+            possible_states: HashMap::from([(initial_state_hash, initial_state)]),
             rules,
             time: 0,
             entropy: 0.,
@@ -142,22 +142,22 @@ impl Simulation {
     }
 
     pub fn next_step(&mut self) {
-        self.reachable_states = self.get_next_reachable_states();
+        self.possible_states = self.get_next_possible_states();
         self.entropy = self.get_entropy();
         self.time += 1;
     }
 
-    fn append_reachable_state(
+    fn append_possible_state(
         new_state: Box<State>,
-        next_reachable_states: &mut HashMap<u64, Box<State>>,
+        next_possible_states: &mut HashMap<u64, Box<State>>,
     ) {
         let hash = new_state.data.get_hash();
-        match next_reachable_states.get_mut(&hash) {
+        match next_possible_states.get_mut(&hash) {
             Some(state) => {
                 state.probability += new_state.probability;
             }
             None => {
-                next_reachable_states.insert(hash, new_state);
+                next_possible_states.insert(hash, new_state);
             }
         }
     }
@@ -239,7 +239,7 @@ impl Simulation {
         let rule_cache = self.cache.rules.get(rule_name).unwrap();
 
         if let Some(state_hash) = rule_cache.actions.get(state_hash) {
-            if let Some(new_state) = self.reachable_states.get(state_hash) {
+            if let Some(new_state) = self.possible_states.get(state_hash) {
                 return Box::new(State {
                     data: new_state.data.clone(),
                     probability: rule.probability_weight,
@@ -307,7 +307,7 @@ impl Simulation {
     ) -> (f64, f64, HashMap<u64, Box<State>>) {
         let mut new_base_state_probability = state.probability;
         let mut applying_rules_probability_weight_sum = 0.;
-        let mut current_reachable_states: HashMap<u64, Box<State>> = HashMap::new();
+        let mut current_possible_states: HashMap<u64, Box<State>> = HashMap::new();
 
         for (rule_name, rule) in &self.rules {
             let rule_applies =
@@ -316,37 +316,37 @@ impl Simulation {
                 new_base_state_probability *= 1. - rule.probability_weight;
                 applying_rules_probability_weight_sum += rule.probability_weight;
                 let new_state = self.get_new_state(&cache_tx, state_hash, state, rule_name, rule);
-                Simulation::append_reachable_state(new_state, &mut current_reachable_states);
+                Simulation::append_possible_state(new_state, &mut current_possible_states);
             }
         }
 
         if new_base_state_probability > 0. {
             let mut new_base_state = state.clone();
             new_base_state.probability = new_base_state_probability;
-            Simulation::append_reachable_state(
+            Simulation::append_possible_state(
                 Box::new(new_base_state),
-                &mut current_reachable_states,
+                &mut current_possible_states,
             );
         }
 
         (
             new_base_state_probability,
             applying_rules_probability_weight_sum,
-            current_reachable_states,
+            current_possible_states,
         )
     }
 
-    fn set_probabilities_for_current_reachable_states(
-        current_reachable_states: &mut HashMap<u64, Box<State>>,
+    fn set_probabilities_for_current_possible_states(
+        current_possible_states: &mut HashMap<u64, Box<State>>,
         state_hash: &u64,
         state: &State,
         new_base_state_probability: f64,
         applying_rules_probability_weight_sum: f64,
     ) {
-        current_reachable_states.par_iter_mut().for_each(
-            |(new_reachable_state_hash, new_reachable_state)| {
-                if new_reachable_state_hash != state_hash {
-                    new_reachable_state.probability *= (state.probability
+        current_possible_states.par_iter_mut().for_each(
+            |(new_possible_state_hash, new_possible_state)| {
+                if new_possible_state_hash != state_hash {
+                    new_possible_state.probability *= (state.probability
                         - new_base_state_probability)
                         / applying_rules_probability_weight_sum;
                 }
@@ -355,37 +355,37 @@ impl Simulation {
     }
 
     // TODO: Implement intervention
-    fn get_next_reachable_states(&mut self) -> HashMap<u64, Box<State>> {
+    fn get_next_possible_states(&mut self) -> HashMap<u64, Box<State>> {
         let (cache_tx, cache_rx) = mpsc::channel();
 
-        let all_current_reachable_states: Vec<HashMap<u64, Box<State>>> = self
-            .reachable_states
+        let all_current_possible_states: Vec<HashMap<u64, Box<State>>> = self
+            .possible_states
             .par_iter()
             .map_with(cache_tx, |cache_tx, (state_hash, state)| {
                 let (
                     new_base_state_probability,
                     applying_rules_probability_weight_sum,
-                    mut current_reachable_states,
+                    mut current_possible_states,
                 ) = self.apply_rules_to_state(cache_tx.clone(), state_hash, state);
 
-                Simulation::set_probabilities_for_current_reachable_states(
-                    &mut current_reachable_states,
+                Simulation::set_probabilities_for_current_possible_states(
+                    &mut current_possible_states,
                     state_hash,
                     state,
                     new_base_state_probability,
                     applying_rules_probability_weight_sum,
                 );
 
-                current_reachable_states
+                current_possible_states
             })
             .collect();
 
-        let mut next_reachable_states: HashMap<u64, Box<State>> = HashMap::new();
-        all_current_reachable_states
+        let mut next_possible_states: HashMap<u64, Box<State>> = HashMap::new();
+        all_current_possible_states
             .iter()
-            .for_each(|current_reachable_states| {
-                current_reachable_states.iter().for_each(|(_, state)| {
-                    Simulation::append_reachable_state(state.clone(), &mut next_reachable_states);
+            .for_each(|current_possible_states| {
+                current_possible_states.iter().for_each(|(_, state)| {
+                    Simulation::append_possible_state(state.clone(), &mut next_possible_states);
                 })
             });
 
@@ -397,7 +397,7 @@ impl Simulation {
             }
         }
 
-        let probability_sum = next_reachable_states
+        let probability_sum = next_possible_states
             .values()
             .fold(0., |sum, state| sum + state.probability);
 
@@ -405,24 +405,24 @@ impl Simulation {
             panic!("Probability sum {:?} is not 1", probability_sum);
         }
 
-        next_reachable_states
+        next_possible_states
     }
 
     fn get_entropy(&self) -> f64 {
         let entropy = self
-            .reachable_states
+            .possible_states
             .par_values()
             .map(|state| state.probability * -state.probability.log2())
             .sum();
         entropy
     }
 
-    // TODO: sometimes there are states which are possible once but not later. Do not use reachable_states but create a register for states, so rewrite everything
+    // TODO: sometimes there are states which are possible once but not later. Do not use possible_states but create a register for states, so rewrite everything
     // Note: This was not thought possible, but a base_state_probability of 0 does not imply that the simulation is not doubly statistical
     pub fn get_graph_from_cache(&self) -> Graph<Box<State>, String> {
         let mut graph = Graph::<Box<State>, String>::new();
         let mut nodes: HashMap<u64, NodeIndex> = HashMap::new();
-        for (state_hash, state) in &self.reachable_states {
+        for (state_hash, state) in &self.possible_states {
             let node_index = graph.add_node(state.clone());
             nodes.insert(*state_hash, node_index);
         }
@@ -444,7 +444,7 @@ impl Simulation {
         probability_distribution: &HashMap<u64, f64>,
     ) {
         for (state_hash, probability) in probability_distribution {
-            let state = self.reachable_states.get_mut(state_hash).unwrap();
+            let state = self.possible_states.get_mut(state_hash).unwrap();
             state.probability = *probability;
         }
     }
@@ -456,19 +456,19 @@ impl Simulation {
             self.rules.clone(),
         );
         // TODO: this does not work for pure deterministic simulations. use something like hashset
-        let mut current_number_of_reachable_states = 0;
-        while simulation.reachable_states.len() != current_number_of_reachable_states {
-            current_number_of_reachable_states = simulation.reachable_states.len();
+        let mut current_number_of_possible_states = 0;
+        while simulation.possible_states.len() != current_number_of_possible_states {
+            current_number_of_possible_states = simulation.possible_states.len();
             simulation.next_step();
             println!(
-                "Time: {} Number of reachable states: {}",
+                "Time: {} Number of possible states: {}",
                 simulation.time,
-                simulation.reachable_states.len()
+                simulation.possible_states.len()
             );
         }
-        let uniform_probability = 1. / simulation.reachable_states.len() as f64;
+        let uniform_probability = 1. / simulation.possible_states.len() as f64;
         let uniform_distribution: HashMap<u64, f64> =
-            HashMap::from_iter(simulation.reachable_states.iter().map(|(state_hash, _)| {
+            HashMap::from_iter(simulation.possible_states.iter().map(|(state_hash, _)| {
                 let prob: (u64, f64) = (*state_hash, uniform_probability);
                 prob
             }));
@@ -533,12 +533,12 @@ impl Simulation {
     //             };
     //             row.insert(outgoing_state_hash, transition_rate);
     //         }
-    //         let unreachable_node_indices = graph
+    //         let impossible_node_indices = graph
     //             .node_indices()
     //             .filter(|node_index| !row.contains_key(&graph[*node_index].data.get_hash()))
     //             .collect::<Vec<NodeIndex>>();
-    //         for unreachable_node_index in unreachable_node_indices {
-    //             row.insert(graph[unreachable_node_index].data.get_hash(), 0.);
+    //         for impossible_node_index in impossible_node_indices {
+    //             row.insert(graph[impossible_node_index].data.get_hash(), 0.);
     //         }
     //         transition_rate_matrix.insert(graph[node_index].data.get_hash(), row);
     //     }
