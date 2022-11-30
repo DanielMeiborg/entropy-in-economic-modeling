@@ -88,7 +88,7 @@ where
 
 // Playground
 fn main() {
-    const NUMBER_OF_BINS: u64 = 10;
+    const NUMBER_OF_BINS: i64 = 7;
     let resources = HashMap::from([(
         "point".to_string(),
         Resource {
@@ -98,10 +98,10 @@ fn main() {
         },
     )]);
 
-    let data: Data = Data {
+    let initial_state = State {
         entities: {
             let mut entities = HashMap::new();
-            (1..NUMBER_OF_BINS).for_each(|place: u64| {
+            (1..NUMBER_OF_BINS).for_each(|place: i64| {
                 entities.insert(
                     format!("bin {place}"),
                     Entity {
@@ -119,30 +119,29 @@ fn main() {
         },
     };
 
-    let rules: HashMap<String, Box<Rule>> = HashMap::from([
+    let rules: HashMap<String, Rule> = HashMap::from([
         (
             "yield forward".to_string(),
-            Box::new(Rule {
+            Rule {
                 description: "a bin yields the point to the bin with the next higher place"
                     .to_string(),
                 probability_weight: 1.,
                 condition: |_| true,
                 actions: |state: &State| {
                     let current_point_owner = state
-                        .data
                         .entities
                         .iter()
                         .find(|(_, entity)| entity.resources["point"] > 0.)
                         .unwrap()
                         .0
                         .clone();
-                    let current_point_owner_place: u64 = current_point_owner
+                    let current_point_owner_place: i64 = current_point_owner
                         .split_whitespace()
                         .last()
                         .unwrap()
                         .parse()
                         .unwrap();
-                    let next_point_owner_place: u64 =
+                    let next_point_owner_place: i64 =
                         { current_point_owner_place + 1 }.rem_euclid(NUMBER_OF_BINS);
                     let next_point_owner = format!("bin {}", next_point_owner_place);
                     vec![
@@ -160,31 +159,30 @@ fn main() {
                         },
                     ]
                 },
-            }),
+            },
         ),
         (
             "yield backward".to_string(),
-            Box::new(Rule {
+            Rule {
                 description: "a bin yields the point to the bin with the next lower place"
                     .to_string(),
                 probability_weight: 1.,
                 condition: |_| true,
                 actions: |state: &State| {
                     let current_point_owner = state
-                        .data
                         .entities
                         .iter()
                         .find(|(_, entity)| entity.resources["point"] > 0.)
                         .unwrap()
                         .0
                         .clone();
-                    let current_point_owner_place: u64 = current_point_owner
+                    let current_point_owner_place: i64 = current_point_owner
                         .split_whitespace()
                         .last()
                         .unwrap()
                         .parse()
                         .unwrap();
-                    let next_point_owner_place: u64 =
+                    let next_point_owner_place: i64 =
                         { current_point_owner_place - 1 }.rem_euclid(NUMBER_OF_BINS);
                     let next_point_owner = format!("bin {}", next_point_owner_place);
                     vec![
@@ -202,42 +200,64 @@ fn main() {
                         },
                     ]
                 },
-            }),
+            },
         ),
     ]);
 
-    let mut simulation = Simulation::new(resources, data, rules);
+    let mut simulation = Simulation::new(resources, initial_state, rules);
     let mut entropies: Vec<f64> = Vec::new();
     let time = SystemTime::now();
-    let mut current_number_of_states: usize;
-    for time in 0..10 {
-        current_number_of_states = simulation.possible_states.len();
-        simulation.next_step();
+    for time in 0..100 {
         entropies.push(simulation.entropy);
         println!(
-            "Time: {} Number of states: {}",
-            time, current_number_of_states
+            "Time: {} Number of reachable states: {}",
+            time,
+            simulation.reachable_states.len()
         );
+        println!(
+            "reachable states: {:?}\n",
+            simulation
+                .reachable_states
+                .iter()
+                .map(|(state_hash, probability)| (
+                    simulation
+                        .possible_states
+                        .get(state_hash)
+                        .unwrap()
+                        .entities
+                        .iter()
+                        .find(|(_, entity)| entity.resources["point"] > 0.)
+                        .unwrap()
+                        .0
+                        .clone(),
+                    *probability
+                ))
+                .collect::<Vec<(String, f64)>>()
+        );
+        simulation.next_step();
     }
     let duration = time.elapsed().unwrap();
     println!("================================================");
     write("out/entropies.txt", format!("{:?}", &entropies));
-    let probability_distribution = simulation
-        .possible_states
-        .par_iter()
-        .map(|(_, state)| state.probability)
-        .collect::<Vec<f64>>();
+    let probability_distribution: Vec<f64> =
+        simulation.reachable_states.values().cloned().collect();
     write(
         "out/probability_distribution.txt",
         format!("{:?}", &probability_distribution),
     );
+    println!("probability distribution: {:#?}", probability_distribution);
 
-    let most_probable_state = simulation
-        .possible_states
-        .par_iter()
-        .max_by(|(_, a), (_, b)| a.probability.partial_cmp(&b.probability).unwrap())
+    let highest_probability = simulation
+        .reachable_states
+        .values()
+        .max_by(|a, b| a.partial_cmp(b).unwrap())
         .unwrap();
-    println!("most probable state: {:#?}", most_probable_state);
+    let most_likely_state = simulation
+        .reachable_states
+        .iter()
+        .find(|(_, probability)| *probability == highest_probability);
+
+    println!("most probable state: {:#?}", most_likely_state);
 
     println!("The simulation took {} seconds", duration.as_secs_f64());
 
