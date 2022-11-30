@@ -70,6 +70,7 @@ pub struct Rule {
 }
 
 #[derive(PartialEq, Clone, Debug)]
+#[allow(dead_code)]
 pub enum Capacity {
     Limited(f64),
     Unlimited,
@@ -99,7 +100,7 @@ pub struct Simulation {
     pub initial_state: Box<State>,
     pub reachable_states: HashMap<u64, Box<State>>,
     pub rules: HashMap<String, Box<Rule>>,
-    pub current_time: u64,
+    pub time: u64,
     pub entropy: f64,
     cache: Cache,
 }
@@ -134,7 +135,7 @@ impl Simulation {
             initial_state: initial_state.clone(),
             reachable_states: HashMap::from([(initial_state_hash, initial_state)]),
             rules,
-            current_time: 0,
+            time: 0,
             entropy: 0.,
             cache: Cache { rules: rule_caches },
         }
@@ -143,7 +144,7 @@ impl Simulation {
     pub fn next_step(&mut self) {
         self.reachable_states = self.get_next_reachable_states();
         self.entropy = self.get_entropy();
-        self.current_time += 1;
+        self.time += 1;
     }
 
     fn append_reachable_state(
@@ -257,7 +258,7 @@ impl Simulation {
                 .data
                 .entities
                 .get_mut(&action.entity)
-                .unwrap()
+                .unwrap_or_else(|| panic!("Entity {} does not exist", action.entity))
                 .resources
                 .insert(action.resource.clone(), action.new_amount);
 
@@ -416,24 +417,71 @@ impl Simulation {
         entropy
     }
 
+    // TODO: sometimes there are states which are possible once but not later. Do not use reachable_states but create a register for states, so rewrite everything
+    // Note: This was not thought possible, but a base_state_probability of 0 does not imply that the simulation is not doubly statistical
     pub fn get_graph_from_cache(&self) -> Graph<Box<State>, String> {
         let mut graph = Graph::<Box<State>, String>::new();
-        let mut state_nodes: HashMap<u64, NodeIndex> = HashMap::new();
+        let mut nodes: HashMap<u64, NodeIndex> = HashMap::new();
         for (state_hash, state) in &self.reachable_states {
             let node_index = graph.add_node(state.clone());
-            state_nodes.insert(*state_hash, node_index);
+            nodes.insert(*state_hash, node_index);
         }
-        for (state_hash, state_node) in &state_nodes {
+        for (state_hash, state_node) in &nodes {
             for (rule_name, rule_cache) in &self.cache.rules {
                 if rule_cache.condition.get(state_hash).is_some() {
                     if let Some(new_state_hash) = rule_cache.actions.get(state_hash) {
-                        let new_state_node = state_nodes.get(new_state_hash).unwrap();
+                        let new_state_node = nodes.get(new_state_hash).unwrap();
                         graph.add_edge(*state_node, *new_state_node, rule_name.clone());
                     }
                 }
             }
         }
         graph
+    }
+
+    pub fn insert_probability_distribution(
+        &mut self,
+        probability_distribution: &HashMap<u64, f64>,
+    ) {
+        for (state_hash, probability) in probability_distribution {
+            let state = self.reachable_states.get_mut(state_hash).unwrap();
+            state.probability = *probability;
+        }
+    }
+
+    pub fn is_doubly_statistical(&self) -> bool {
+        let mut simulation = Simulation::new(
+            self.resources.clone(),
+            self.initial_state.data.clone(),
+            self.rules.clone(),
+        );
+        // TODO: this does not work for pure deterministic simulations. use something like hashset
+        let mut current_number_of_reachable_states = 0;
+        while simulation.reachable_states.len() != current_number_of_reachable_states {
+            current_number_of_reachable_states = simulation.reachable_states.len();
+            simulation.next_step();
+            println!(
+                "Time: {} Number of reachable states: {}",
+                simulation.time,
+                simulation.reachable_states.len()
+            );
+        }
+        let uniform_probability = 1. / simulation.reachable_states.len() as f64;
+        let uniform_distribution: HashMap<u64, f64> =
+            HashMap::from_iter(simulation.reachable_states.iter().map(|(state_hash, _)| {
+                let prob: (u64, f64) = (*state_hash, uniform_probability);
+                prob
+            }));
+        let mut uniform_simulation = simulation.clone();
+        uniform_simulation.insert_probability_distribution(&uniform_distribution);
+        let uniform_entropy = uniform_simulation.get_entropy();
+        uniform_simulation.next_step();
+        let uniform_entropy_after_step = uniform_simulation.get_entropy();
+        println!(
+            "Uniform entropy: {} Uniform entropy after step: {}",
+            uniform_entropy, uniform_entropy_after_step
+        );
+        uniform_entropy == uniform_entropy_after_step
     }
 
     // while one could implement this function, an easier approach for validationg the doubly statistical property is by inserting
