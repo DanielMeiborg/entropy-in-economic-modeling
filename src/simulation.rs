@@ -12,6 +12,12 @@ pub struct Entity {
     pub resources: HashMap<String, f64>,
 }
 
+impl Entity {
+    pub fn get_resource(&self, resource_name: &String) -> f64 {
+        *self.resources.get(resource_name).unwrap()
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct Data {
     pub entities: HashMap<String, Entity>,
@@ -51,6 +57,12 @@ impl Data {
 pub struct State {
     pub data: Data,
     pub probability: f64,
+}
+
+impl State {
+    pub fn get_entity(&self, entity_name: &String) -> Entity {
+        self.data.entities.get(entity_name).unwrap().clone()
+    }
 }
 
 #[derive(PartialEq, Clone, Debug)]
