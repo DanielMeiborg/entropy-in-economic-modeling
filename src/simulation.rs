@@ -2,7 +2,9 @@ use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::sync::mpsc::{self, Sender};
 
-use hashbrown::HashMap;
+#[allow(unused_imports)]
+use hashbrown::{HashMap, HashSet};
+
 use petgraph::graph::NodeIndex;
 use petgraph::Graph;
 use rayon::prelude::*;
@@ -20,11 +22,11 @@ impl Entity {
 }
 
 #[derive(Clone, Debug)]
-pub struct Data {
+pub struct State {
     pub entities: HashMap<String, Entity>,
 }
 
-impl Hash for Data {
+impl Hash for State {
     fn hash<H: Hasher>(&self, state: &mut H) {
         for (name, entity) in &self.entities {
             for (resource_name, amount) in &entity.resources {
@@ -34,7 +36,7 @@ impl Hash for Data {
     }
 }
 
-impl PartialEq for Data {
+impl PartialEq for State {
     fn eq(&self, other: &Self) -> bool {
         let self_hasher = &mut DefaultHasher::new();
         self.hash(self_hasher);
@@ -44,26 +46,18 @@ impl PartialEq for Data {
     }
 }
 
-impl Eq for Data {}
-
-impl Data {
-    pub fn get_hash(&self) -> u64 {
-        let mut hasher = &mut DefaultHasher::new();
-        self.hash(&mut hasher);
-        hasher.finish()
-    }
-}
-
-#[derive(PartialEq, Clone, Debug)]
-pub struct State {
-    pub data: Data,
-    pub probability: f64,
-}
+impl Eq for State {}
 
 impl State {
     #[allow(dead_code)]
     pub fn get_entity(&self, entity_name: &String) -> Entity {
-        self.data.entities.get(entity_name).unwrap().clone()
+        self.entities.get(entity_name).unwrap().clone()
+    }
+
+    pub fn get_hash(&self) -> u64 {
+        let mut hasher = &mut DefaultHasher::new();
+        self.hash(&mut hasher);
+        hasher.finish()
     }
 }
 
@@ -111,25 +105,23 @@ struct Cache {
 #[derive(Clone)]
 pub struct Simulation {
     pub resources: HashMap<String, Resource>,
-    pub initial_state: Box<State>,
-    pub possible_states: HashMap<u64, Box<State>>,
-    pub rules: HashMap<String, Box<Rule>>,
+    pub initial_state: State,
+    pub possible_states: HashMap<u64, State>,
+    pub reachable_states: HashMap<u64, f64>,
+    pub rules: HashMap<String, Rule>,
     pub time: u64,
     pub entropy: f64,
     cache: Cache,
 }
 
 impl Simulation {
+    /// Creates a new simulation with the given resources, initial state and rules.
     pub fn new(
         resources: HashMap<String, Resource>,
-        data: Data,
-        rules: HashMap<String, Box<Rule>>,
+        initial_state: State,
+        rules: HashMap<String, Rule>,
     ) -> Simulation {
-        let initial_state_hash = data.get_hash();
-        let initial_state = Box::new(State {
-            data,
-            probability: 1.0,
-        });
+        let initial_state_hash = initial_state.get_hash();
 
         let rule_caches: HashMap<String, RuleCache> = rules
             .par_iter()
@@ -148,6 +140,7 @@ impl Simulation {
             resources,
             initial_state: initial_state.clone(),
             possible_states: HashMap::from([(initial_state_hash, initial_state)]),
+            reachable_states: HashMap::from([(initial_state_hash, 1.0)]),
             rules,
             time: 0,
             entropy: 0.,
@@ -155,33 +148,35 @@ impl Simulation {
         }
     }
 
+    /// Runs the simulation for one timestep.
     pub fn next_step(&mut self) {
-        self.possible_states = self.get_next_possible_states();
+        self.update_reachable_states();
         self.entropy = self.get_entropy();
         self.time += 1;
     }
 
-    fn append_possible_state(
-        new_state: Box<State>,
-        next_possible_states: &mut HashMap<u64, Box<State>>,
-    ) {
-        let hash = new_state.data.get_hash();
-        match next_possible_states.get_mut(&hash) {
-            Some(state) => {
-                state.probability += new_state.probability;
+    /// Appends a state to reachable_states or increases its probability if it already exists.
+    ///
+    /// It also adds the state to possible_states if it is not already there.
+    fn append_reachable_state(&mut self, new_state_hash: u64, new_state_probability: f64) {
+        match self.reachable_states.get_mut(&new_state_hash) {
+            Some(probability) => {
+                *probability += new_state_probability;
             }
             None => {
-                next_possible_states.insert(hash, new_state);
+                self.reachable_states
+                    .insert(new_state_hash, new_state_probability);
             }
         }
     }
 
+    /// Checks if the given state satisfies all resource constrains.
     fn check_resources(&self, new_state: &State) {
         for (resource_name, resource) in &self.resources {
             match &resource.capacity {
                 Capacity::Limited(limit) => {
                     let mut total_amount: f64 = 0.;
-                    for (entity_name, entity) in &new_state.data.entities {
+                    for (entity_name, entity) in &new_state.entities {
                         let entity_amount = entity.resources.get(resource_name).unwrap();
                         if entity_amount < &0. {
                             panic!(
@@ -199,7 +194,7 @@ impl Simulation {
                     }
                 }
                 Capacity::Unlimited => {
-                    for (entity_name, entity) in &new_state.data.entities {
+                    for (entity_name, entity) in &new_state.entities {
                         let entity_amount = entity.resources.get(resource_name).unwrap();
                         if entity_amount < &0. {
                             panic!(
@@ -213,18 +208,22 @@ impl Simulation {
         }
     }
 
-    fn check_rule_applies(
+    /// Checks if a given rule applies to the given state using or updating the cache respectively.
+    fn check_if_rule_applies(
         &self,
         cache_tx: &Sender<Cache>,
         rule_name: &String,
-        rule: &Rule,
         state_hash: &u64,
-        state: &State,
     ) -> bool {
         let rule_cache = self.cache.rules.get(rule_name).unwrap();
+        let rule = self.rules.get(rule_name).unwrap();
+        if rule.probability_weight == 0. {
+            return false;
+        }
         match rule_cache.condition.get(state_hash) {
             Some(result) => *result,
             None => {
+                let state = self.possible_states.get(state_hash).unwrap();
                 let result = (rule.condition)(state);
                 cache_tx
                     .send(Cache {
@@ -242,37 +241,31 @@ impl Simulation {
         }
     }
 
+    /// Gets the state the given rule results in from the given state using or updating the cache respectively.
     fn get_new_state(
         &self,
         cache_tx: &Sender<Cache>,
-        state_hash: &u64,
-        state: &State,
+        base_state_hash: &u64,
         rule_name: &String,
-        rule: &Rule,
-    ) -> Box<State> {
+    ) -> State {
         let rule_cache = self.cache.rules.get(rule_name).unwrap();
 
-        if let Some(state_hash) = rule_cache.actions.get(state_hash) {
+        if let Some(state_hash) = rule_cache.actions.get(base_state_hash) {
             if let Some(new_state) = self.possible_states.get(state_hash) {
-                return Box::new(State {
-                    data: new_state.data.clone(),
-                    probability: rule.probability_weight,
-                });
+                return new_state.clone();
             }
         }
 
-        let mut new_state = State {
-            data: state.data.clone(),
-            probability: rule.probability_weight,
-        };
+        let rule = self.rules.get(rule_name).unwrap();
+        let base_state = self.possible_states.get(base_state_hash).unwrap();
+        let actions = (rule.actions)(base_state);
 
-        let actions = (rule.actions)(state);
+        let mut new_state = self.possible_states.get(base_state_hash).unwrap().clone();
         for action in actions {
             new_state
-                .data
                 .entities
                 .get_mut(&action.entity)
-                .unwrap_or_else(|| panic!("Entity {} does not exist", action.entity))
+                .unwrap()
                 .resources
                 .insert(action.resource.clone(), action.new_amount);
 
@@ -282,127 +275,123 @@ impl Simulation {
                 .unwrap()
                 .capacity_per_entity;
 
-            match capacity_per_entity {
-                Capacity::Limited(limit) => {
-                    if action.new_amount > *limit {
-                        panic!(
-                            "Resource limit per entity exceeded for resource {resource_name}",
-                            resource_name = action.resource
-                        );
-                    }
+            if let Capacity::Limited(limit) = capacity_per_entity {
+                if action.new_amount > *limit {
+                    panic!(
+                        "Resource limit per entity exceeded for resource {resource_name}",
+                        resource_name = action.resource
+                    );
                 }
-                Capacity::Unlimited => {}
             }
         }
 
         self.check_resources(&new_state);
 
-        let new_state_hash = new_state.data.get_hash();
+        let new_state_hash = new_state.get_hash();
         cache_tx
             .send(Cache {
                 rules: HashMap::from([(
                     rule_name.clone(),
                     RuleCache {
                         condition: HashMap::new(),
-                        actions: HashMap::from([(*state_hash, new_state_hash)]),
+                        actions: HashMap::from([(*base_state_hash, new_state_hash)]),
                     },
                 )]),
             })
             .unwrap();
 
-        Box::new(new_state)
+        new_state
     }
 
-    fn apply_rules_to_state(
-        &self,
+    // Add all reachable states from the base state to reachable_states and possible_states while using or updating the cache respectively.
+    fn add_reachable_states_from_base_state(
+        &mut self,
         cache_tx: Sender<Cache>,
-        state_hash: &u64,
-        state: &State,
-    ) -> (f64, f64, HashMap<u64, Box<State>>) {
-        let mut new_base_state_probability = state.probability;
+        base_state_hash: &u64,
+        base_state_probability: &f64,
+    ) {
+        let mut new_base_state_probability = *base_state_probability;
         let mut applying_rules_probability_weight_sum = 0.;
-        let mut current_possible_states: HashMap<u64, Box<State>> = HashMap::new();
+        let mut reachable_states_from_base_state_by_rule: HashMap<u64, String> = HashMap::new();
 
         for (rule_name, rule) in &self.rules {
-            let rule_applies =
-                self.check_rule_applies(&cache_tx, rule_name, rule, state_hash, state);
-            if rule_applies && rule.probability_weight > 0. {
+            let rule_applies = self.check_if_rule_applies(&cache_tx, rule_name, base_state_hash);
+            if rule_applies {
                 new_base_state_probability *= 1. - rule.probability_weight;
                 applying_rules_probability_weight_sum += rule.probability_weight;
-                let new_state = self.get_new_state(&cache_tx, state_hash, state, rule_name, rule);
-                Simulation::append_possible_state(new_state, &mut current_possible_states);
+                let new_state = self.get_new_state(&cache_tx, base_state_hash, rule_name);
+                let new_state_hash = new_state.get_hash();
+                self.possible_states
+                    .entry(new_state_hash)
+                    .or_insert(new_state);
+                reachable_states_from_base_state_by_rule.insert(new_state_hash, rule_name.clone());
             }
         }
 
         if new_base_state_probability > 0. {
-            let mut new_base_state = state.clone();
-            new_base_state.probability = new_base_state_probability;
-            Simulation::append_possible_state(
-                Box::new(new_base_state),
-                &mut current_possible_states,
-            );
+            self.append_reachable_state(*base_state_hash, new_base_state_probability);
         }
+        let probabilities_for_reachable_states_from_base_state = self
+            .get_probabilities_for_reachable_states_from_base_state(
+                reachable_states_from_base_state_by_rule,
+                base_state_hash,
+                *base_state_probability,
+                new_base_state_probability,
+                applying_rules_probability_weight_sum,
+            );
+        probabilities_for_reachable_states_from_base_state
+            .iter()
+            .for_each(|(new_state_hash, new_state_probability)| {
+                self.append_reachable_state(*new_state_hash, *new_state_probability);
+            })
+    }
 
-        (
-            new_base_state_probability,
-            applying_rules_probability_weight_sum,
-            current_possible_states,
+    // TODO: Documentation
+    fn get_probabilities_for_reachable_states_from_base_state(
+        &self,
+        reachable_states_from_base_state_by_rule: HashMap<u64, String>,
+        base_state_hash: &u64,
+        old_base_state_probability: f64,
+        new_base_state_probability: f64,
+        applying_rules_probability_weight_sum: f64,
+    ) -> HashMap<u64, f64> {
+        HashMap::from_par_iter(
+            reachable_states_from_base_state_by_rule
+                .par_iter()
+                .filter_map(|(new_reachable_state_hash, rule)| {
+                    if new_reachable_state_hash != base_state_hash {
+                        let rule_probability_weight =
+                            self.rules.get(rule).unwrap().probability_weight;
+                        let new_reachable_state_probability = rule_probability_weight
+                            * old_base_state_probability
+                            * (1. - new_base_state_probability)
+                            / applying_rules_probability_weight_sum;
+                        Option::Some((*new_reachable_state_hash, new_reachable_state_probability))
+                    } else {
+                        Option::None
+                    }
+                }),
         )
     }
 
-    fn set_probabilities_for_current_possible_states(
-        current_possible_states: &mut HashMap<u64, Box<State>>,
-        state_hash: &u64,
-        state: &State,
-        new_base_state_probability: f64,
-        applying_rules_probability_weight_sum: f64,
-    ) {
-        current_possible_states.par_iter_mut().for_each(
-            |(new_possible_state_hash, new_possible_state)| {
-                if new_possible_state_hash != state_hash {
-                    new_possible_state.probability *= (state.probability
-                        - new_base_state_probability)
-                        / applying_rules_probability_weight_sum;
-                }
-            },
-        );
-    }
-
-    fn get_next_possible_states(&mut self) -> HashMap<u64, Box<State>> {
+    // TODO: Reimplement multithreading
+    /// Update reachable_states and possible_states to the next time step.
+    fn update_reachable_states(&mut self) {
         let (cache_tx, cache_rx) = mpsc::channel();
 
-        let all_current_possible_states: Vec<HashMap<u64, Box<State>>> = self
-            .possible_states
-            .par_iter()
-            .map_with(cache_tx, |cache_tx, (state_hash, state)| {
-                let (
-                    new_base_state_probability,
-                    applying_rules_probability_weight_sum,
-                    mut current_possible_states,
-                ) = self.apply_rules_to_state(cache_tx.clone(), state_hash, state);
-
-                Simulation::set_probabilities_for_current_possible_states(
-                    &mut current_possible_states,
-                    state_hash,
-                    state,
-                    new_base_state_probability,
-                    applying_rules_probability_weight_sum,
-                );
-
-                current_possible_states
-            })
-            .collect();
-
-        let mut next_possible_states: HashMap<u64, Box<State>> = HashMap::new();
-        all_current_possible_states
+        let old_reachable_states = self.reachable_states.clone();
+        self.reachable_states.clear();
+        old_reachable_states
             .iter()
-            .for_each(|current_possible_states| {
-                current_possible_states.iter().for_each(|(_, state)| {
-                    Simulation::append_possible_state(state.clone(), &mut next_possible_states);
-                })
+            .for_each(|(base_state_hash, base_state_probability)| {
+                self.add_reachable_states_from_base_state(
+                    cache_tx.clone(),
+                    base_state_hash,
+                    base_state_probability,
+                );
             });
 
-        for cache in cache_rx {
+        while let Result::Ok(cache) = cache_rx.try_recv() {
             for (rule_name, rule_cache) in cache.rules {
                 let own_rule_cache = self.cache.rules.get_mut(&rule_name).unwrap();
                 own_rule_cache.condition.extend(rule_cache.condition);
@@ -410,28 +399,31 @@ impl Simulation {
             }
         }
 
-        let probability_sum = next_possible_states
-            .values()
-            .fold(0., |sum, state| sum + state.probability);
-
+        let probability_sum = self.reachable_states.par_values().sum();
         if !(0.9999999 < probability_sum && probability_sum < 1.0000001) {
             panic!("Probability sum {:?} is not 1", probability_sum);
         }
-
-        next_possible_states
     }
 
+    /// Gets the entropy of the current probability distribution.
     fn get_entropy(&self) -> f64 {
         let entropy = self
-            .possible_states
-            .par_values()
-            .map(|state| state.probability * -state.probability.log2())
+            .reachable_states
+            .par_iter()
+            .map(|(_, probability)| {
+                if *probability > 0. {
+                    probability * -probability.log2()
+                } else {
+                    0.
+                }
+            })
             .sum();
         entropy
     }
 
-    pub fn get_graph_from_cache(&self) -> Graph<Box<State>, String> {
-        let mut graph = Graph::<Box<State>, String>::new();
+    // TODO: Rewrite this
+    pub fn get_graph_from_cache(&self) -> Graph<State, String> {
+        let mut graph = Graph::<State, String>::new();
         let mut nodes: HashMap<u64, NodeIndex> = HashMap::new();
         for (state_hash, state) in &self.possible_states {
             let node_index = graph.add_node(state.clone());
@@ -450,20 +442,11 @@ impl Simulation {
         graph
     }
 
-    pub fn insert_probability_distribution(
-        &mut self,
-        probability_distribution: &HashMap<u64, f64>,
-    ) {
-        for (state_hash, probability) in probability_distribution {
-            let state = self.possible_states.get_mut(state_hash).unwrap();
-            state.probability = *probability;
-        }
-    }
-
+    // TODO: See github issue #3
     pub fn is_doubly_statistical(&self) -> bool {
         let mut simulation = Simulation::new(
             self.resources.clone(),
-            self.initial_state.data.clone(),
+            self.initial_state.clone(),
             self.rules.clone(),
         );
         let mut current_number_of_possible_states = 0;
@@ -483,7 +466,7 @@ impl Simulation {
                 prob
             }));
         let mut uniform_simulation = simulation.clone();
-        uniform_simulation.insert_probability_distribution(&uniform_distribution);
+        uniform_simulation.reachable_states = uniform_distribution;
         let uniform_entropy = uniform_simulation.get_entropy();
         uniform_simulation.next_step();
         let uniform_entropy_after_step = uniform_simulation.get_entropy();
@@ -493,71 +476,4 @@ impl Simulation {
         );
         uniform_entropy == uniform_entropy_after_step
     }
-
-    // while one could implement this function, an easier approach for validationg the doubly statistical property is by inserting
-    // the uniform distribution and look at the change or not-change
-    // pub fn get_transition_rate_matrix(&mut self) -> HashMap<u64, HashMap<u64, f64>> {
-    //     let mut transition_rate_matrix: HashMap<u64, HashMap<u64, f64>> = HashMap::new();
-    //     let graph = self.get_graph_from_cache();
-    //     for node_index in graph.node_indices() {
-    //         let mut row: HashMap<u64, f64> = HashMap::new();
-    //         for outgoing_node_index in
-    //             graph.neighbors_directed(node_index, petgraph::Direction::Outgoing)
-    //         {
-    //             let outgoing_state_hash = graph[outgoing_node_index].data.get_hash();
-    //             let transition_rate: f64 = {
-    //                 let current_state_hash = graph[node_index].data.get_hash();
-    //                 let rule_to_outgoing_state = self
-    //                     .cache
-    //                     .rules
-    //                     .par_iter()
-    //                     .find_any(|(_, rule_cache)| {
-    //                         if rule_cache.condition.get(&current_state_hash).is_some() {
-    //                             let new_state_hash =
-    //                                 rule_cache.actions.get(&current_state_hash).unwrap();
-    //                             new_state_hash == &outgoing_state_hash
-    //                         } else {
-    //                             false
-    //                         }
-    //                     })
-    //                     .unwrap()
-    //                     .0;
-    //                 let applying_rules_probability_weight_sum: f64 = graph
-    //                     .neighbors_directed(node_index, petgraph::Direction::Outgoing)
-    //                     .map(|neighbor_node_index| {
-    //                         let connecting_edge =
-    //                             graph.find_edge(node_index, neighbor_node_index).unwrap();
-    //                         let connecting_rule_name = &graph[connecting_edge];
-    //                         let connecting_rule = self.rules.get(connecting_rule_name).unwrap();
-
-    //                         connecting_rule.probability_weight
-    //                     })
-    //                     .sum();
-    //                 let rule_to_outgoing_state_weight = self
-    //                     .rules
-    //                     .get(rule_to_outgoing_state)
-    //                     .unwrap()
-    //                     .probability_weight;
-
-    //                 // There's still stuff to do
-    //             };
-    //             row.insert(outgoing_state_hash, transition_rate);
-    //         }
-    //         let impossible_node_indices = graph
-    //             .node_indices()
-    //             .filter(|node_index| !row.contains_key(&graph[*node_index].data.get_hash()))
-    //             .collect::<Vec<NodeIndex>>();
-    //         for impossible_node_index in impossible_node_indices {
-    //             row.insert(graph[impossible_node_index].data.get_hash(), 0.);
-    //         }
-    //         transition_rate_matrix.insert(graph[node_index].data.get_hash(), row);
-    //     }
-    //     {
-    //         let transition_rate_matrix_len = transition_rate_matrix.len();
-    //         transition_rate_matrix.par_iter().for_each(|(_, row)| {
-    //             assert_eq!(row.len(), transition_rate_matrix_len);
-    //         });
-    //     }
-    //     transition_rate_matrix
-    // }
 }
