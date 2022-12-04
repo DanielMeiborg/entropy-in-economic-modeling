@@ -9,6 +9,7 @@ use petgraph::graph::NodeIndex;
 use petgraph::Graph;
 use rayon::prelude::*;
 
+/// A single entity in the simulation.
 #[derive(PartialEq, Debug, Clone)]
 pub struct Entity {
     pub resources: HashMap<String, f64>,
@@ -21,6 +22,7 @@ impl Entity {
     }
 }
 
+/// A possible state in the markov chain of the simulation, which is only dependent on the configuration of the entities in the simulation.
 #[derive(Clone, Debug)]
 pub struct State {
     pub entities: HashMap<String, Entity>,
@@ -61,6 +63,7 @@ impl State {
     }
 }
 
+/// An action a rule can take on a single entity and resource when its condition is met.
 #[derive(PartialEq, Clone, Debug)]
 pub struct Action {
     pub name: String,
@@ -69,11 +72,24 @@ pub struct Action {
     pub new_amount: f64,
 }
 
+/// An abstraction over the transition rates of the underlying markov chain.
 #[derive(Clone)]
 pub struct Rule {
     pub description: String,
+
+    /// The conditions that must be met for the rule to be applied.
     pub condition: fn(&State) -> bool,
+
+    /// A measure of how often the rule is applied when the condition is met.
+    ///
+    /// As two rules cannot be applied at the same time, first, the probability that no rule applies is calculated.
+    /// The remaining probability is divived among the remaining rules according to their weights.
     pub probability_weight: f64,
+
+    /// A function which specifies to which state the rule leads when applied.
+    ///
+    /// The function takes the current state as input and returns multiple actions.
+    /// A new state is then created by applying all actions to the current state.
     pub actions: fn(&State) -> Vec<Action>,
 }
 
@@ -84,6 +100,15 @@ pub enum Capacity {
     Unlimited,
 }
 
+/// A resource in the simulation which may or may not have a capacity.
+///
+/// A resource is essentially a parameter an entity and thus ultimately a state can have.
+/// The capacity is a constrain on the amount of the resource being distributed among the entities.
+/// It is allowed that the sum of the amounts of a resource among all entities is lesser than the capacity.
+/// It is assumed that the capacity is always greater than or equal to zero.
+///
+/// The capacity_per_entity is an additional constrain on the amount of the resource an individual entity can have.
+/// This can again be unlimited.
 #[derive(PartialEq, Clone, Debug)]
 pub struct Resource {
     pub description: String,
@@ -102,15 +127,46 @@ struct Cache {
     pub rules: HashMap<String, RuleCache>,
 }
 
+/// All information and methods needed to run the simulation.
+///
+/// All information is managed by the methods of this struct.
+/// Do not change properties manually.
 #[derive(Clone)]
 pub struct Simulation {
+    /// All resources in the simulation.
+    ///
+    /// The key is the name of the resource, while the value the resource itself.
+    /// This must not change after initialization.
     pub resources: HashMap<String, Resource>,
+
+    /// The initial state of the simulation.
+    ///
+    /// This state has a starting probability of 1.
+    /// This must not change after initialization.
     pub initial_state: State,
+
+    /// All states which are possible at at some point during the simulation.
+    ///
+    /// The key is the hash of the state, while the value is the state itself.
     pub possible_states: HashMap<u64, State>,
+
+    /// All states which are possible at the current timestep.
+    ///
+    /// The key is the hash of the state, while the value is the probability that this state occurs.
     pub reachable_states: HashMap<u64, f64>,
+
+    /// All rules in the simulation.
+    ///
+    /// This must not change after initialization.
     pub rules: HashMap<String, Rule>,
+
+    /// The current timestep of the simulation, starting at 0.
     pub time: u64,
+
+    /// The current entropy of the probability distribution of the reachable_states.
     pub entropy: f64,
+
+    /// The cache used for performance purposes.
     cache: Cache,
 }
 
@@ -421,7 +477,6 @@ impl Simulation {
         entropy
     }
 
-    // TODO: Rewrite this
     pub fn get_graph_from_cache(&self) -> Graph<State, String> {
         let mut graph = Graph::<State, String>::new();
         let mut nodes: HashMap<u64, NodeIndex> = HashMap::new();
@@ -442,22 +497,20 @@ impl Simulation {
         graph
     }
 
-    // TODO: See github issue #3
     pub fn is_doubly_statistical(&self) -> bool {
         let mut simulation = Simulation::new(
             self.resources.clone(),
             self.initial_state.clone(),
             self.rules.clone(),
         );
-        let mut current_number_of_possible_states = 0;
-        while simulation.possible_states.len() != current_number_of_possible_states {
-            current_number_of_possible_states = simulation.possible_states.len();
+        let mut current_reachable_states = simulation.reachable_states.clone();
+        while current_reachable_states.len() != self.reachable_states.len()
+            && current_reachable_states
+                .keys()
+                .all(|k| self.reachable_states.contains_key(k))
+        {
+            current_reachable_states = simulation.reachable_states.clone();
             simulation.next_step();
-            println!(
-                "Time: {} Number of possible states: {}",
-                simulation.time,
-                simulation.possible_states.len()
-            );
         }
         let uniform_probability = 1. / simulation.possible_states.len() as f64;
         let uniform_distribution: HashMap<u64, f64> =
@@ -470,10 +523,6 @@ impl Simulation {
         let uniform_entropy = uniform_simulation.get_entropy();
         uniform_simulation.next_step();
         let uniform_entropy_after_step = uniform_simulation.get_entropy();
-        println!(
-            "Uniform entropy: {} Uniform entropy after step: {}",
-            uniform_entropy, uniform_entropy_after_step
-        );
         uniform_entropy == uniform_entropy_after_step
     }
 }

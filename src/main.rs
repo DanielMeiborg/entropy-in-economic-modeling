@@ -78,7 +78,7 @@ where
     sub_graph
 }
 
-pub fn write<P>(path: P, content: String)
+pub fn write_to_file<P>(path: P, content: String)
 where
     P: AsRef<Path>,
 {
@@ -238,10 +238,10 @@ fn main() {
     }
     let duration = time.elapsed().unwrap();
     println!("================================================");
-    write("out/entropies.txt", format!("{:?}", &entropies));
+    write_to_file("out/entropies.txt", format!("{:?}", &entropies));
     let probability_distribution: Vec<f64> =
         simulation.reachable_states.values().cloned().collect();
-    write(
+    write_to_file(
         "out/probability_distribution.txt",
         format!("{:?}", &probability_distribution),
     );
@@ -264,7 +264,7 @@ fn main() {
     let graph = simulation.get_graph_from_cache();
     println!("Nodes in graph: {}", graph.node_count());
     println!("Edges in graph {}", graph.edge_count());
-    write(
+    write_to_file(
         "out/graph.dot",
         format!("{:?}", Dot::with_config(&graph, &[])),
     );
@@ -274,137 +274,3 @@ fn main() {
         simulation_is_doubly_statistical
     );
 }
-
-// let resources = HashMap::from([(
-//     "money".to_string(),
-//     Resource {
-//         description: "In dollars".to_string(),
-//         capacity: Capacity::Unlimited,
-//         capacity_per_entity: Capacity::Limited(100.),
-//     },
-// )]);
-
-// let data = Data {
-//     entities: HashMap::from([
-//         (
-//             "A".to_string(),
-//             Entity {
-//                 resources: HashMap::from([("money".to_string(), 1.)]),
-//             },
-//         ),
-//         (
-//             "B".to_string(),
-//             Entity {
-//                 resources: HashMap::from([("money".to_string(), 3.)]),
-//             },
-//         ),
-//         (
-//             "C".to_string(),
-//             Entity {
-//                 resources: HashMap::from([("money".to_string(), 5.)]),
-//             },
-//         ),
-//     ]),
-// };
-
-// let rules = HashMap::from([
-//     (
-//         "Socialism".to_string(),
-//         Box::new(Rule {
-//             description: "Richer one gives 2 dollars to poorer one".to_string(),
-//             condition: |state: &State| {
-//                 let mut money = Vec::new();
-//                 for entity in state.data.entities.values() {
-//                     money.push(entity.resources.get("money").unwrap());
-//                 }
-//                 return money.par_iter().any(|x| **x > 2.);
-//             },
-//             probability_weight: 0.5,
-//             actions: |state: &State| {
-//                 let poorest_entity_name = state
-//                     .data
-//                     .entities
-//                     .keys()
-//                     .nth(get_min_index_f64(
-//                         &state
-//                             .data
-//                             .entities
-//                             .values()
-//                             .map(|entity| get_resource(entity, &"money".to_string()))
-//                             .collect(),
-//                     ))
-//                     .unwrap()
-//                     .clone();
-
-//                 let richest_entity_name = state
-//                     .data
-//                     .entities
-//                     .keys()
-//                     .nth(get_max_index_f64(
-//                         &state
-//                             .data
-//                             .entities
-//                             .values()
-//                             .map(|entity| get_resource(entity, &"money".to_string()))
-//                             .collect(),
-//                     ))
-//                     .unwrap()
-//                     .clone();
-
-//                 vec![
-//                     Action {
-//                         name: "Get".to_string(),
-//                         resource: "money".to_string(),
-//                         entity: poorest_entity_name.clone(),
-//                         new_amount: get_resource(
-//                             &get_entity(state, &poorest_entity_name),
-//                             &"money".to_string(),
-//                         ) + 1.,
-//                     },
-//                     Action {
-//                         name: "Give".to_string(),
-//                         resource: "money".to_string(),
-//                         entity: richest_entity_name.clone(),
-//                         new_amount: get_resource(
-//                             &get_entity(state, &richest_entity_name),
-//                             &"money".to_string(),
-//                         ) - 1.,
-//                     },
-//                 ]
-//             },
-//         }),
-//     ),
-//     (
-//         "Capitalism".to_string(),
-//         Box::new(Rule {
-//             description:
-//                 "If somebody has 4 or more dollars and enough capacity, they double their wealth"
-//                     .to_string(),
-//             condition: |state: &State| {
-//                 for entity in state.data.entities.values() {
-//                     let money = get_resource(entity, &"money".to_string());
-//                     if (4. ..50.).contains(&money) {
-//                         return true;
-//                     }
-//                 }
-//                 false
-//             },
-//             probability_weight: 0.5,
-//             actions: |state| {
-//                 let mut actions = Vec::new();
-//                 for (name, entity) in &state.data.entities {
-//                     let money = get_resource(entity, &"money".to_string());
-//                     if (4. ..50.).contains(&money) {
-//                         actions.push(Action {
-//                             name: "Get".to_string(),
-//                             resource: "money".to_string(),
-//                             entity: name.clone(),
-//                             new_amount: money * 2.,
-//                         });
-//                     }
-//                 }
-//                 actions
-//             },
-//         }),
-//     ),
-// ]);
