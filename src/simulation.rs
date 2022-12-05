@@ -18,11 +18,15 @@ pub struct Entity {
 impl Entity {
     #[allow(dead_code)]
     pub fn get_resource(&self, resource_name: &String) -> f64 {
-        *self.resources.get(resource_name).unwrap()
+        *self
+            .resources
+            .get(resource_name)
+            .expect("Resource {resource_name} not found")
     }
 }
 
-/// A possible state in the markov chain of the simulation, which is only dependent on the configuration of the entities in the simulation.
+/// A possible state in the markov chain of the simulation, which is only dependent on
+/// the configuration of the entities in the simulation.
 #[derive(Clone, Debug)]
 pub struct State {
     pub entities: HashMap<String, Entity>,
@@ -53,7 +57,10 @@ impl Eq for State {}
 impl State {
     #[allow(dead_code)]
     pub fn get_entity(&self, entity_name: &String) -> Entity {
-        self.entities.get(entity_name).unwrap().clone()
+        self.entities
+            .get(entity_name)
+            .expect("entity {entity_name} not found")
+            .clone()
     }
 
     pub fn get_hash(&self) -> u64 {
@@ -233,14 +240,17 @@ impl Simulation {
                 Capacity::Limited(limit) => {
                     let mut total_amount: f64 = 0.;
                     for (entity_name, entity) in &new_state.entities {
-                        let entity_amount = entity.resources.get(resource_name).unwrap();
-                        if entity_amount < &0. {
+                        let entity_amount = entity
+                            .resources
+                            .get(resource_name)
+                            .expect("Entity {entity_name} does not have resource {resource_name}");
+                        if *entity_amount < 0. {
                             panic!(
                                 "Entity {} has negative amount of resource {}",
                                 entity_name, resource_name
                             );
                         }
-                        total_amount += entity.resources.get(resource_name).unwrap();
+                        total_amount += entity_amount;
                         if total_amount > *limit {
                             panic!(
                                 "Resource limit exceeded for resource {resource_name}",
@@ -251,7 +261,10 @@ impl Simulation {
                 }
                 Capacity::Unlimited => {
                     for (entity_name, entity) in &new_state.entities {
-                        let entity_amount = entity.resources.get(resource_name).unwrap();
+                        let entity_amount = entity
+                            .resources
+                            .get(resource_name)
+                            .expect("Entity {entity_name} does not have resource {resource_name}");
                         if entity_amount < &0. {
                             panic!(
                                 "Entity {} has negative amount of resource {}",
@@ -271,27 +284,38 @@ impl Simulation {
         rule_name: &String,
         state_hash: &u64,
     ) -> bool {
-        let rule_cache = self.cache.rules.get(rule_name).unwrap();
-        let rule = self.rules.get(rule_name).unwrap();
+        let rule_cache = self
+            .cache
+            .rules
+            .get(rule_name)
+            .expect("Rule {rule_name} not found in cache");
+        let rule = self
+            .rules
+            .get(rule_name)
+            .expect("Rule {rule_name} not found");
         if rule.probability_weight == 0. {
             return false;
         }
         match rule_cache.condition.get(state_hash) {
             Some(result) => *result,
             None => {
-                let state = self.possible_states.get(state_hash).unwrap();
+                let state = self
+                    .possible_states
+                    .get(state_hash)
+                    .expect("State with hash {state_hash} not found in possible_states");
                 let result = (rule.condition)(state);
-                cache_tx
-                    .send(Cache {
-                        rules: HashMap::from([(
-                            rule_name.clone(),
-                            RuleCache {
-                                condition: HashMap::from([(*state_hash, result)]),
-                                actions: HashMap::new(),
-                            },
-                        )]),
-                    })
-                    .unwrap();
+                match cache_tx.send(Cache {
+                    rules: HashMap::from([(
+                        rule_name.clone(),
+                        RuleCache {
+                            condition: HashMap::from([(*state_hash, result)]),
+                            actions: HashMap::new(),
+                        },
+                    )]),
+                }) {
+                    Ok(_) => {}
+                    Err(e) => panic!("Sending cache update failed with error {e}"),
+                };
                 result
             }
         }
@@ -304,7 +328,11 @@ impl Simulation {
         base_state_hash: &u64,
         rule_name: &String,
     ) -> State {
-        let rule_cache = self.cache.rules.get(rule_name).unwrap();
+        let rule_cache = self
+            .cache
+            .rules
+            .get(rule_name)
+            .expect("Rule {rule_name} not found in cache");
 
         if let Some(state_hash) = rule_cache.actions.get(base_state_hash) {
             if let Some(new_state) = self.possible_states.get(state_hash) {
@@ -312,23 +340,29 @@ impl Simulation {
             }
         }
 
-        let rule = self.rules.get(rule_name).unwrap();
-        let base_state = self.possible_states.get(base_state_hash).unwrap();
+        let rule = self
+            .rules
+            .get(rule_name)
+            .expect("Rule {rule_name} not found");
+        let base_state = self
+            .possible_states
+            .get(base_state_hash)
+            .expect("Base state {base_state_hash} not found in possible_states");
         let actions = (rule.actions)(base_state);
 
-        let mut new_state = self.possible_states.get(base_state_hash).unwrap().clone();
+        let mut new_state = base_state.clone();
         for action in actions {
             new_state
                 .entities
                 .get_mut(&action.entity)
-                .unwrap()
+                .expect("Entity {action.entity} not found in state")
                 .resources
                 .insert(action.resource.clone(), action.new_amount);
 
             let capacity_per_entity = &self
                 .resources
                 .get(&action.resource)
-                .unwrap()
+                .expect("Resource {action.resource} not found in resources")
                 .capacity_per_entity;
 
             if let Capacity::Limited(limit) = capacity_per_entity {
@@ -344,17 +378,18 @@ impl Simulation {
         self.check_resources(&new_state);
 
         let new_state_hash = new_state.get_hash();
-        cache_tx
-            .send(Cache {
-                rules: HashMap::from([(
-                    rule_name.clone(),
-                    RuleCache {
-                        condition: HashMap::new(),
-                        actions: HashMap::from([(*base_state_hash, new_state_hash)]),
-                    },
-                )]),
-            })
-            .unwrap();
+        match cache_tx.send(Cache {
+            rules: HashMap::from([(
+                rule_name.clone(),
+                RuleCache {
+                    condition: HashMap::new(),
+                    actions: HashMap::from([(*base_state_hash, new_state_hash)]),
+                },
+            )]),
+        }) {
+            Ok(_) => {}
+            Err(e) => panic!("Sending cache update failed with error {e}"),
+        };
 
         new_state
     }
@@ -414,10 +449,13 @@ impl Simulation {
         HashMap::from_par_iter(
             reachable_states_from_base_state_by_rule
                 .par_iter()
-                .filter_map(|(new_reachable_state_hash, rule)| {
+                .filter_map(|(new_reachable_state_hash, rule_name)| {
                     if new_reachable_state_hash != base_state_hash {
-                        let rule_probability_weight =
-                            self.rules.get(rule).unwrap().probability_weight;
+                        let rule_probability_weight = self
+                            .rules
+                            .get(rule_name)
+                            .expect("rule {rule_name} not found in rules")
+                            .probability_weight;
                         let new_reachable_state_probability = rule_probability_weight
                             * old_base_state_probability
                             * (1. - new_base_state_probability)
@@ -449,7 +487,11 @@ impl Simulation {
 
         while let Result::Ok(cache) = cache_rx.try_recv() {
             for (rule_name, rule_cache) in cache.rules {
-                let own_rule_cache = self.cache.rules.get_mut(&rule_name).unwrap();
+                let own_rule_cache = self
+                    .cache
+                    .rules
+                    .get_mut(&rule_name)
+                    .expect("Rule {rule_name} not found in self.cache");
                 own_rule_cache.condition.extend(rule_cache.condition);
                 own_rule_cache.actions.extend(rule_cache.actions);
             }
