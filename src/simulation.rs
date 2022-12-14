@@ -1,6 +1,6 @@
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
-use std::sync::mpsc::{self, Sender};
+use std::sync::mpsc::{self, Receiver, Sender};
 
 #[allow(unused_imports)]
 use hashbrown::{HashMap, HashSet};
@@ -68,6 +68,37 @@ impl State {
         self.hash(&mut hasher);
         hasher.finish()
     }
+
+    pub fn apply_actions(
+        &self,
+        actions: &Vec<Action>,
+        resources: &HashMap<String, Resource>,
+    ) -> State {
+        let mut new_state = self.clone();
+        for action in actions {
+            new_state
+                .entities
+                .get_mut(&action.entity)
+                .expect("Entity {action.entity} not found in state")
+                .resources
+                .insert(action.resource.clone(), action.new_amount);
+
+            let capacity_per_entity = &resources
+                .get(&action.resource)
+                .expect("Resource {action.resource} not found in resources")
+                .capacity_per_entity;
+
+            if let Capacity::Limited(limit) = capacity_per_entity {
+                if action.new_amount > *limit {
+                    panic!(
+                        "Resource limit per entity exceeded for resource {resource_name}",
+                        resource_name = action.resource
+                    );
+                }
+            }
+        }
+        new_state
+    }
 }
 
 /// An action a rule can take on a single entity and resource when its condition is met.
@@ -132,6 +163,20 @@ struct RuleCache {
 #[derive(PartialEq, Clone, Debug)]
 struct Cache {
     pub rules: HashMap<String, RuleCache>,
+}
+
+#[derive(PartialEq, Clone, Debug)]
+struct ConditionCacheUpdate {
+    pub rule_name: String,
+    pub base_state_hash: u64,
+    pub result: bool,
+}
+
+#[derive(PartialEq, Clone, Debug)]
+struct ActionCacheUpdate {
+    pub rule_name: String,
+    pub base_state_hash: u64,
+    pub new_state_hash: u64,
 }
 
 /// All information and methods needed to run the simulation.
@@ -234,7 +279,7 @@ impl Simulation {
     }
 
     /// Checks if the given state satisfies all resource constrains.
-    fn check_resources(&self, new_state: &State) {
+    fn check_resource_capacities(&self, new_state: &State) {
         for (resource_name, resource) in &self.resources {
             match &resource.capacity {
                 Capacity::Limited(limit) => {
@@ -280,10 +325,9 @@ impl Simulation {
     /// Checks if a given rule applies to the given state using or updating the cache respectively.
     fn check_if_rule_applies(
         &self,
-        cache_tx: &Sender<Cache>,
         rule_name: &String,
         state_hash: &u64,
-    ) -> bool {
+    ) -> (bool, Option<ConditionCacheUpdate>) {
         let rule_cache = self
             .cache
             .rules
@@ -294,29 +338,22 @@ impl Simulation {
             .get(rule_name)
             .expect("Rule {rule_name} not found");
         if rule.probability_weight == 0. {
-            return false;
+            return (false, None);
         }
         match rule_cache.condition.get(state_hash) {
-            Some(result) => *result,
+            Some(result) => (*result, None),
             None => {
                 let state = self
                     .possible_states
                     .get(state_hash)
                     .expect("State with hash {state_hash} not found in possible_states");
                 let result = (rule.condition)(state);
-                match cache_tx.send(Cache {
-                    rules: HashMap::from([(
-                        rule_name.clone(),
-                        RuleCache {
-                            condition: HashMap::from([(*state_hash, result)]),
-                            actions: HashMap::new(),
-                        },
-                    )]),
-                }) {
-                    Ok(_) => {}
-                    Err(e) => panic!("Sending cache update failed with error {e}"),
+                let cache = ConditionCacheUpdate {
+                    rule_name: rule_name.clone(),
+                    base_state_hash: *state_hash,
+                    result,
                 };
-                result
+                (result, Some(cache))
             }
         }
     }
@@ -324,10 +361,9 @@ impl Simulation {
     /// Gets the state the given rule results in from the given state using or updating the cache respectively.
     fn get_new_state(
         &self,
-        cache_tx: &Sender<Cache>,
         base_state_hash: &u64,
         rule_name: &String,
-    ) -> State {
+    ) -> (State, Option<ActionCacheUpdate>) {
         let rule_cache = self
             .cache
             .rules
@@ -336,7 +372,7 @@ impl Simulation {
 
         if let Some(state_hash) = rule_cache.actions.get(base_state_hash) {
             if let Some(new_state) = self.possible_states.get(state_hash) {
-                return new_state.clone();
+                return (new_state.clone(), None);
             }
         }
 
@@ -350,81 +386,70 @@ impl Simulation {
             .expect("Base state {base_state_hash} not found in possible_states");
         let actions = (rule.actions)(base_state);
 
-        let mut new_state = base_state.clone();
-        for action in actions {
-            new_state
-                .entities
-                .get_mut(&action.entity)
-                .expect("Entity {action.entity} not found in state")
-                .resources
-                .insert(action.resource.clone(), action.new_amount);
+        let new_state = base_state.apply_actions(&actions, &self.resources);
 
-            let capacity_per_entity = &self
-                .resources
-                .get(&action.resource)
-                .expect("Resource {action.resource} not found in resources")
-                .capacity_per_entity;
-
-            if let Capacity::Limited(limit) = capacity_per_entity {
-                if action.new_amount > *limit {
-                    panic!(
-                        "Resource limit per entity exceeded for resource {resource_name}",
-                        resource_name = action.resource
-                    );
-                }
-            }
-        }
-
-        self.check_resources(&new_state);
+        self.check_resource_capacities(&new_state);
 
         let new_state_hash = new_state.get_hash();
-        match cache_tx.send(Cache {
-            rules: HashMap::from([(
-                rule_name.clone(),
-                RuleCache {
-                    condition: HashMap::new(),
-                    actions: HashMap::from([(*base_state_hash, new_state_hash)]),
-                },
-            )]),
-        }) {
-            Ok(_) => {}
-            Err(e) => panic!("Sending cache update failed with error {e}"),
+        let cache_update = ActionCacheUpdate {
+            rule_name: rule_name.clone(),
+            base_state_hash: *base_state_hash,
+            new_state_hash,
         };
-
-        new_state
+        (new_state, Some(cache_update))
     }
 
     // Add all reachable states from the base state to reachable_states and possible_states while using or updating the cache respectively.
-    fn add_reachable_states_from_base_state(
-        &mut self,
-        cache_tx: Sender<Cache>,
+    fn get_reachable_states_from_base_state(
+        &self,
         base_state_hash: &u64,
         base_state_probability: &f64,
+    ) -> (
+        HashMap<u64, f64>,
+        HashMap<u64, State>,
+        Vec<ConditionCacheUpdate>,
+        Vec<ActionCacheUpdate>,
     ) {
         let mut new_base_state_probability = *base_state_probability;
         let mut applying_rules_probability_weight_sum = 0.;
-        let mut reachable_states_from_base_state_by_rule: HashMap<u64, String> = HashMap::new();
+        let mut reachable_states_from_base_state_by_rule_probability_weight: HashMap<u64, f64> =
+            HashMap::new();
+
+        let mut condition_cache_updates = Vec::new();
+        let mut action_cache_updates = Vec::new();
+
+        let mut new_possible_states = HashMap::new();
 
         for (rule_name, rule) in &self.rules {
-            let rule_applies = self.check_if_rule_applies(&cache_tx, rule_name, base_state_hash);
+            let (rule_applies, condition_cache_update) =
+                self.check_if_rule_applies(rule_name, base_state_hash);
+            if let Some(cache) = condition_cache_update {
+                condition_cache_updates.push(cache);
+            }
             if rule_applies {
                 new_base_state_probability *= 1. - rule.probability_weight;
                 applying_rules_probability_weight_sum += rule.probability_weight;
-                let new_state = self.get_new_state(&cache_tx, base_state_hash, rule_name);
+                let (new_state, action_cache_update) =
+                    self.get_new_state(base_state_hash, rule_name);
+                if let Some(cache) = action_cache_update {
+                    action_cache_updates.push(cache);
+                }
                 let new_state_hash = new_state.get_hash();
-                self.possible_states
-                    .entry(new_state_hash)
-                    .or_insert(new_state);
-                reachable_states_from_base_state_by_rule.insert(new_state_hash, rule_name.clone());
+                new_possible_states.insert(new_state_hash, new_state);
+                reachable_states_from_base_state_by_rule_probability_weight
+                    .insert(new_state_hash, rule.probability_weight);
             }
         }
 
+        let mut new_reachable_states: HashMap<u64, f64> = HashMap::new();
+
         if new_base_state_probability > 0. {
-            self.append_reachable_state(*base_state_hash, new_base_state_probability);
+            new_reachable_states.insert(*base_state_hash, new_base_state_probability);
         }
-        let probabilities_for_reachable_states_from_base_state = self
-            .get_probabilities_for_reachable_states_from_base_state(
-                reachable_states_from_base_state_by_rule,
+
+        let probabilities_for_reachable_states_from_base_state =
+            Simulation::get_probabilities_for_reachable_states_from_base_state(
+                reachable_states_from_base_state_by_rule_probability_weight,
                 base_state_hash,
                 *base_state_probability,
                 new_base_state_probability,
@@ -433,29 +458,28 @@ impl Simulation {
         probabilities_for_reachable_states_from_base_state
             .iter()
             .for_each(|(new_state_hash, new_state_probability)| {
-                self.append_reachable_state(*new_state_hash, *new_state_probability);
-            })
+                new_reachable_states.insert(*new_state_hash, *new_state_probability);
+            });
+        (
+            new_reachable_states,
+            new_possible_states,
+            condition_cache_updates,
+            action_cache_updates,
+        )
     }
 
-    // TODO: Documentation
     fn get_probabilities_for_reachable_states_from_base_state(
-        &self,
-        reachable_states_from_base_state_by_rule: HashMap<u64, String>,
+        reachable_states_from_base_state_by_rule_probability_weight: HashMap<u64, f64>,
         base_state_hash: &u64,
         old_base_state_probability: f64,
         new_base_state_probability: f64,
         applying_rules_probability_weight_sum: f64,
     ) -> HashMap<u64, f64> {
         HashMap::from_par_iter(
-            reachable_states_from_base_state_by_rule
+            reachable_states_from_base_state_by_rule_probability_weight
                 .par_iter()
-                .filter_map(|(new_reachable_state_hash, rule_name)| {
+                .filter_map(|(new_reachable_state_hash, rule_probability_weight)| {
                     if new_reachable_state_hash != base_state_hash {
-                        let rule_probability_weight = self
-                            .rules
-                            .get(rule_name)
-                            .expect("rule {rule_name} not found in rules")
-                            .probability_weight;
                         let new_reachable_state_probability = rule_probability_weight
                             * old_base_state_probability
                             * (1. - new_base_state_probability)
@@ -471,32 +495,59 @@ impl Simulation {
     // TODO: Reimplement multithreading
     /// Update reachable_states and possible_states to the next time step.
     fn update_reachable_states(&mut self) {
-        let (cache_tx, cache_rx) = mpsc::channel();
+        let (condition_cache_updates_tx, condition_cache_updates_rx) = mpsc::channel();
+        let (action_cache_updates_tx, action_cache_updates_rx) = mpsc::channel();
 
         let old_reachable_states = self.reachable_states.clone();
         self.reachable_states.clear();
         old_reachable_states
             .iter()
             .for_each(|(base_state_hash, base_state_probability)| {
-                self.add_reachable_states_from_base_state(
-                    cache_tx.clone(),
-                    base_state_hash,
-                    base_state_probability,
-                );
+                let (
+                    new_reachable_states,
+                    new_possible_states,
+                    condition_cache_updates,
+                    action_cache_update,
+                ) = self
+                    .get_reachable_states_from_base_state(base_state_hash, base_state_probability);
+                for cache_update in condition_cache_updates {
+                    condition_cache_updates_tx.send(cache_update).unwrap();
+                }
+                for cache_update in action_cache_update {
+                    action_cache_updates_tx.send(cache_update).unwrap();
+                }
+                self.possible_states.extend(new_possible_states);
+                for (reachable_state_hash, reachable_state_probability) in new_reachable_states {
+                    self.append_reachable_state(reachable_state_hash, reachable_state_probability)
+                }
             });
 
-        while let Result::Ok(cache) = cache_rx.try_recv() {
-            for (rule_name, rule_cache) in cache.rules {
-                let own_rule_cache = self
-                    .cache
-                    .rules
-                    .get_mut(&rule_name)
-                    .expect("Rule {rule_name} not found in self.cache");
-                own_rule_cache.condition.extend(rule_cache.condition);
-                own_rule_cache.actions.extend(rule_cache.actions);
-            }
+        // TODO: Assert that the cache does not yet contain the cache update
+        while let Result::Ok(condition_cache_update) = condition_cache_updates_rx.try_recv() {
+            let own_rule_cache = self
+                .cache
+                .rules
+                .get_mut(&condition_cache_update.rule_name)
+                .expect("Rule {rule_name} not found in self.cache");
+            own_rule_cache.condition.insert(
+                condition_cache_update.base_state_hash,
+                condition_cache_update.result,
+            );
         }
 
+        while let Result::Ok(action_cache_update) = action_cache_updates_rx.try_recv() {
+            let own_rule_cache = self
+                .cache
+                .rules
+                .get_mut(&action_cache_update.rule_name)
+                .expect("Rule {rule_name} not found in self.cache");
+            own_rule_cache.actions.insert(
+                action_cache_update.base_state_hash,
+                action_cache_update.new_state_hash,
+            );
+        }
+
+        // TODO: Improve this
         let probability_sum = self.reachable_states.par_values().sum();
         if !(0.9999999 < probability_sum && probability_sum < 1.0000001) {
             panic!("Probability sum {:?} is not 1", probability_sum);
@@ -519,6 +570,7 @@ impl Simulation {
         entropy
     }
 
+    ///Gets a graph from the possible states with the nodes being the states and the directed edges being the rule names.
     pub fn get_graph_from_cache(&self) -> Graph<State, String> {
         let mut graph = Graph::<State, String>::new();
         let mut nodes: HashMap<u64, NodeIndex> = HashMap::new();
@@ -539,6 +591,7 @@ impl Simulation {
         graph
     }
 
+    /// Checks if the uniform distribution is a steady state i.e. if the transition rate matrix is doubly statistical.
     pub fn is_doubly_statistical(&self) -> bool {
         let mut simulation = Simulation::new(
             self.resources.clone(),
