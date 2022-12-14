@@ -1,6 +1,7 @@
 use std::time::SystemTime;
 
 use hashbrown::HashMap;
+use itertools::Itertools;
 use petgraph::dot::Dot;
 use rayon::prelude::*;
 
@@ -90,11 +91,11 @@ where
 fn main() {
     const NUMBER_OF_BINS: i64 = 7;
     let resources = HashMap::from([(
-        "point".to_string(),
+        ResourceName("point".to_string()),
         Resource {
             description: "a point a bin can have".to_string(),
-            capacity: Capacity::Limited(1.),
-            capacity_per_entity: Capacity::Limited(1.),
+            capacity: Capacity::Limited(Amount(1.)),
+            capacity_per_entity: Capacity::Limited(Amount(1.)),
         },
     )]);
 
@@ -103,35 +104,41 @@ fn main() {
             let mut entities = HashMap::new();
             (1..NUMBER_OF_BINS).for_each(|place: i64| {
                 entities.insert(
-                    format!("bin {place}"),
+                    EntityName(format!("bin {place}")),
                     Entity {
-                        resources: HashMap::from([("point".to_string(), 0.)]),
+                        resources: HashMap::from([(ResourceName("point".to_string()), Amount(0.))]),
                     },
                 );
             });
             entities.insert(
-                "bin 0".to_string(),
+                EntityName("bin 0".to_string()),
                 Entity {
-                    resources: HashMap::from([("point".to_string(), 1.)]),
+                    resources: HashMap::from([(ResourceName("point".to_string()), Amount(1.))]),
                 },
             );
             entities
         },
     };
 
-    let rules: HashMap<String, Rule> = HashMap::from([
+    let rules = HashMap::from([
         (
-            "yield forward".to_string(),
+            RuleName("yield forward".to_string()),
             Rule {
                 description: "a bin yields the point to the bin with the next higher place"
                     .to_string(),
-                probability_weight: 1.,
-                condition: |_| true,
-                actions: |state: &State| {
+                probability_weight: ProbabilityWeight(1.),
+                condition: |_| RuleApplies(true),
+                actions: |state: State| {
                     let current_point_owner = state
                         .entities
                         .iter()
-                        .find(|(_, entity)| entity.resources["point"] > 0.)
+                        .find(|(_, entity)| {
+                            *entity
+                                .resources
+                                .get(&ResourceName("point".to_string()))
+                                .unwrap()
+                                > Amount(0.)
+                        })
                         .unwrap()
                         .0
                         .clone();
@@ -143,36 +150,42 @@ fn main() {
                         .unwrap();
                     let next_point_owner_place: i64 =
                         { current_point_owner_place + 1 }.rem_euclid(NUMBER_OF_BINS);
-                    let next_point_owner = format!("bin {}", next_point_owner_place);
+                    let next_point_owner = EntityName(format!("bin {}", next_point_owner_place));
                     vec![
                         Action {
                             name: "yield point".to_string(),
                             entity: current_point_owner,
-                            resource: "point".to_string(),
-                            new_amount: 0.,
+                            resource: ResourceName("point".to_string()),
+                            new_amount: Amount(0.),
                         },
                         Action {
                             name: "get point".to_string(),
                             entity: next_point_owner,
-                            resource: "point".to_string(),
-                            new_amount: 1.,
+                            resource: ResourceName("point".to_string()),
+                            new_amount: Amount(1.),
                         },
                     ]
                 },
             },
         ),
         (
-            "yield backward".to_string(),
+            RuleName("yield backward".to_string()),
             Rule {
                 description: "a bin yields the point to the bin with the next lower place"
                     .to_string(),
-                probability_weight: 1.,
-                condition: |_| true,
-                actions: |state: &State| {
+                probability_weight: ProbabilityWeight(1.),
+                condition: |_| RuleApplies(true),
+                actions: |state: State| {
                     let current_point_owner = state
                         .entities
                         .iter()
-                        .find(|(_, entity)| entity.resources["point"] > 0.)
+                        .find(|(_, entity)| {
+                            *entity
+                                .resources
+                                .get(&ResourceName("point".to_string()))
+                                .unwrap()
+                                > Amount(0.)
+                        })
                         .unwrap()
                         .0
                         .clone();
@@ -184,19 +197,19 @@ fn main() {
                         .unwrap();
                     let next_point_owner_place: i64 =
                         { current_point_owner_place - 1 }.rem_euclid(NUMBER_OF_BINS);
-                    let next_point_owner = format!("bin {}", next_point_owner_place);
+                    let next_point_owner = EntityName(format!("bin {}", next_point_owner_place));
                     vec![
                         Action {
                             name: "yield point".to_string(),
                             entity: current_point_owner,
-                            resource: "point".to_string(),
-                            new_amount: 0.,
+                            resource: ResourceName("point".to_string()),
+                            new_amount: Amount(0.),
                         },
                         Action {
                             name: "get point".to_string(),
                             entity: next_point_owner,
-                            resource: "point".to_string(),
-                            new_amount: 1.,
+                            resource: ResourceName("point".to_string()),
+                            new_amount: Amount(1.),
                         },
                     ]
                 },
@@ -204,8 +217,8 @@ fn main() {
         ),
     ]);
 
-    let mut simulation = Simulation::new(resources, initial_state, rules);
-    let mut entropies: Vec<f64> = Vec::new();
+    let mut simulation = Simulation::create(resources, initial_state, rules);
+    let mut entropies: Vec<Entropy> = Vec::new();
     let time = SystemTime::now();
     for time in 0..100 {
         entropies.push(simulation.entropy);
@@ -214,33 +227,16 @@ fn main() {
             time,
             simulation.reachable_states.len()
         );
-        println!(
-            "reachable states: {:?}\n",
-            simulation
-                .reachable_states
-                .iter()
-                .map(|(state_hash, probability)| (
-                    simulation
-                        .possible_states
-                        .get(state_hash)
-                        .unwrap()
-                        .entities
-                        .iter()
-                        .find(|(_, entity)| entity.resources["point"] > 0.)
-                        .unwrap()
-                        .0
-                        .clone(),
-                    *probability
-                ))
-                .collect::<Vec<(String, f64)>>()
-        );
         simulation.next_step();
     }
     let duration = time.elapsed().unwrap();
     println!("================================================");
     write_to_file("out/entropies.txt", format!("{:?}", &entropies));
-    let probability_distribution: Vec<f64> =
-        simulation.reachable_states.values().cloned().collect();
+    let probability_distribution: Vec<f64> = simulation
+        .reachable_states
+        .values()
+        .map_into::<f64>()
+        .collect();
     write_to_file(
         "out/probability_distribution.txt",
         format!("{:?}", &probability_distribution),
@@ -255,7 +251,7 @@ fn main() {
     let most_likely_state = simulation
         .reachable_states
         .iter()
-        .find(|(_, probability)| *probability == highest_probability);
+        .find(|(_, probability)| **probability == highest_probability);
 
     println!("most probable state: {:#?}", most_likely_state);
 
