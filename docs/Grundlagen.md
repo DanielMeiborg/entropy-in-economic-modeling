@@ -15,10 +15,10 @@ fontsize: 12pt
 \tableofcontents
 \newpage
 
-> _You should call it entropy [...] no one really knows what entropy really is,
-> so in a debate you will always have the advantage._
+> *You should call it entropy [...] no one really knows what entropy really is,
+> so in a debate you will always have the advantage.*
 
-John von Neumann zu Claude Shannon, _Scientific American Vol. 225 No. 3, (1971)_
+John von Neumann zu Claude Shannon, *Scientific American Vol. 225 No. 3, (1971)*
 
 # Information
 
@@ -76,7 +76,7 @@ Entropie wird oft als Maß für die Unordnung eines Systems beschrieben. Die
 Shannon-Entropie ist allerdings etwas abstrakter: Sie beschreibt die Verteilung
 von Wahrscheinlichkeiten.
 
- Die Entropie ist eng mit der statistischen Mechanik verknüpft. In dieser hat
+Die Entropie ist eng mit der statistischen Mechanik verknüpft. In dieser hat
 ein Gas, welches gleichmäßig verteilt ist, eine hohe Entropie, während ein
 Zustand, in dem alle Gasmoleküle an einer Seite des Raumes sind, eine niedrige
 Entropie hat. Das hat den Grund, dass es deutlich mehr Zustände i.e. eine höhere
@@ -96,7 +96,9 @@ möglich ist.
 
 Sei $H(X|Y) = \sum_{x,y}p(y)p(x|y)\log_2{p(x|y)}$ die bedingte Entropie von $X$
 unter der Bedingung $Y$. $H(X|Y)$ ist nie größer als $H(X)$ und nur gleich, wenn
-$Y$ vollkommen unabhängig von $X$ ist.
+$Y$ vollkommen unabhängig von $X$ ist. Das lässt sich anschaulich so erklären,
+dass zusätzliche Information ($Y$) nicht Wissen über $X$ zerstören kann, sondern
+höchstens vollkommen irrelevant sein kann.
 
 ## Relative Entropie
 
@@ -122,8 +124,8 @@ den Zuständen beschreibt. Die Markov-Eigenschaft besagt, dass die
 Übergangswahrscheinlichkeiten ausschließlich von dem aktuellen Zustand abhängen.
 Sei A die Übergangsmatrix mit $A_{ij}$ als Wahrscheinlichkeit, dass Zustand $j$
 in Zustand $i$ übergeht, und $\vec{P}(t)$ die Wahrscheinlichkeiten der Zustände
-zu Zeitpunkt $t$. Dann lautet die sogenannte Mastergleichung $\vec{P}(t + 1) =
-A\vec{P}(t)$.
+zu Zeitpunkt $t$ in Vektorform. Dann lautet die sogenannte Mastergleichung
+$\vec{P}(t + 1) = A\vec{P}(t)$.
 
 ## Stationäre Verteilung
 
@@ -134,6 +136,60 @@ Eigenvektor von $A$ mit Eigenwert $1$.
 
 # Zweiter Hauptsatz der Thermodynamik
 
-# Wirtschaftssysteme
+Für den zweiten Hauptsatz der Thermodynamik existiert keine eindeutige
+Formulierung. Alle aber enthalten die folgende Kernaussage:
+
+> *Entropie kann in einem geschlossenem thermodynamischen System nicht abnehmen.*
+
+Diese Aussage lässt sich bis zu einem gewissen Grad allgemein auf stochastische
+Prozesse zurückführen. Die Beweise dafür wurden in diesem Paper geführt
+[@cover1994processes], aus dem ich die wichtigsten Aussagen und Beweise
+skizzieren werde. Die Notation $X_n$ bezeichnet den Zustand des Systems zu
+Zeitpunkt $n$ und $X_n^k$ die Menge aller Zustände vom Zeitpunkt $n$ bis $k$.
+
+## $H(X_n)$ steigt monoton
+
+*$H(X_n)$ steigt monoton für alle endlichen diskreten Markov-Prozesse wenn die
+stationäre Verteilung uniform ist.*
+
+Sei $m$ die Anzahl an möglichen Zuständen, $\mu_n$ eine
+Wahrscheinlichkeitsverteilung zu Zeitpunkt $n$ und $\mu$ die stationäre
+Verteilung, in diesem Fall die Einheitsverteilung. Dann ist
+
+> $D(\mu_n||\mu) = \sum_x \mu_n(x) \cdot log_2(\frac{\mu_n(x)}{1/m}) = -H(\mu_n) +
+> log(m)$
+
+Da $D(\mu_n||\mu)$ monoton sinkt [@cover1994processes], steigt $H(\mu_n)$
+monoton.
+
+Dieser Satz lässt sich wie folgt verstehen: Angenommen, man hat einen
+Markov-Prozess, keine Informationen über den vorherrschenden Zustand (allerdings
+kennt man die prinzipiell möglichen Zustände und die
+Übergangswahrscheinlichkeiten) und führt man den Prozess für eine gewisse Zeit
+aus. Wenn man danach nicht genauer sagen kann, welche Zustände wie
+wahrscheinlich sind, gilt der zweite Hauptsatz der Thermodynamik.
+
+## $H(X_0|X_{-\infty}^{-n})$ steigt monoton
+
+*Die bedingte Entropie $H(X_0|X_{-\infty}^{-n}) = H(X_0|X_{-n},
+X_{-(n+1)},...)$ der Gegenwart mit der gegebenen Verganenheit steigt monoton
+für alle stochastischen Prozesse.*
+
+Man kann $H(X_0|X_{-\infty}^{-n})$ auch wie folgt darstellen:
+
+> $H(X_0|X_{-\infty}^{-n}) = H(X_0|X_{-\infty}^{-(n+1)}, X_{-n})$
+
+Zusätzliche Information senkt Entropie ([Bedingte
+Entropie](#bedingte-entropie)). Also gilt
+
+> $H(X_0|X_{-\infty}^{-(n+1)}, X_{-n}) \leq H(X_0|X_{-\infty}^{-(n+1)})$
+
+und damit
+
+> $H(X_0|X_{-\infty}^{-n}) \leq H(X_0|X_{-\infty}^{-(n+1)})$.
+
+Anschaulich bedeutet das, dass wenn man die Information über die Vergangenheit
+$X_{-n}$ ignoriert, man dadurch nur Information über die Gegenwart verlieren
+kann.
 
 # Quellen
