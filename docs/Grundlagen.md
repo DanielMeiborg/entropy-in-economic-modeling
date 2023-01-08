@@ -2,7 +2,7 @@
 title: Theorie SIA-Arbeit
 subtitle: ENTROPIE EINES WIRTSCHAFTSSYSTEMS
 author: Daniel Meiborg
-date: \today
+date: Januar 2023
 bibliography: [./main.bib]
 csl: ieee-with-url.csl
 link-citations: true
@@ -12,6 +12,7 @@ fontsize: 12pt
 
 \maketitle
 \newpage
+\renewcommand{\contentsname}{Inhaltsverzeichnis}
 \tableofcontents
 \newpage
 
