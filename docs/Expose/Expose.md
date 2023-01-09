@@ -3,8 +3,8 @@ title: Exposé SIA-Arbeit
 subtitle: ENTROPIE EINES WIRTSCHAFTSSYSTEMS
 author: Daniel Meiborg
 date: \today
-bibliography: [./main.bib]
-csl: ieee-with-url.csl
+bibliography: [../main.bib]
+csl: ../ieee-with-url.csl
 link-citations: true
 documentclass: article
 font_size: 12pt
