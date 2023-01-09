@@ -17,12 +17,10 @@ header-includes: \usepackage[german]{babel}
 \tableofcontents
 \newpage
 
-<!-- TODO: Move reference to end -->
-
 > *You should call it entropy [...] no one really knows what entropy really is,
 > so in a debate you will always have the advantage.*
 
-John von Neumann zu Claude Shannon, *Scientific American Vol. 225 No. 3, (1971)*
+John von Neumann zu Claude Shannon [@tribus1971information]
 
 # Information
 
