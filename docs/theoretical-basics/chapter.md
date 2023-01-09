@@ -135,8 +135,7 @@ $\vec{P}(t + 1) = A\vec{P}(t)$.
 
 Die stationäre Wahrscheinlichkeitsverteilung eines Markov-Prozesses ist die
 Verteilung $\vec{P}$, die erfüllt, dass $\vec{P} = A\vec{P}$. Die stationäre
-Verteilung ist ein Gleichgewichtszustand des Prozesses. $\vec{P}$ ist also ein
-Eigenvektor von $A$ mit Eigenwert $1$.
+Verteilung ist ein Gleichgewichtszustand des Prozesses.
 
 # Zweiter Hauptsatz der Thermodynamik
 

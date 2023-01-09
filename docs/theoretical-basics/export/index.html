@@ -91,13 +91,6 @@
         <section >
             
             <h2>Information</h2>
-<p>‘Überraschung’ eines Ereignisses</p>
-<p class="fragment"><code>$$I: \Omega \to \mathbb{R}_{\geq 0}$$</code></p>
-<p class="fragment"><code>$$A, B \in \Omega: p(A) &lt; p(B) \implies I(B) &lt; I(A)$$</code></p>
-<p class="fragment"><code>$$A \in \Omega: p(A) = 1 \implies I(A) = 0$$</code></p>
-<p class="fragment"><code>$$A \in \Omega: p(A) \approx 0 \implies I(A) \approx \infty$$</code></p>
-<p class="fragment"><code>$$A \perp\!\!\!\perp B \implies I(A \cap B) = I(A) + I(B)$$</code></p>
-<p class="fragment"><code>$$I(x) \mapsto - \log_2p(x)$$</code></p>
 
             </section>
     
@@ -107,7 +100,33 @@
     
         <section >
             
-            <h3>Beispiel</h3>
+            <h3>Eigenschaften</h3>
+<p class="fragment"><code>$$I: \Omega \to \mathbb{R}_{\geq 0}$$</code></p>
+<p class="fragment"><code>$$A, B \in \Omega: p(A) &lt; p(B) \implies I(B) &lt; I(A)$$</code></p>
+<p class="fragment"><code>$$A \in \Omega: p(A) = 1 \implies I(A) = 0$$</code></p>
+<p class="fragment"><code>$$A \in \Omega: p(A) \approx 0 \implies I(A) \approx \infty$$</code></p>
+<p class="fragment"><code>$$A \perp\!\!\!\perp B \implies I(A \cap B) = I(A) + I(B)$$</code></p>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>Definition</h3>
+<p><code>$$I(x) \mapsto - \log_2p(x)$$</code></p>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>Beispiel 1</h3>
 <p>Sei <code>$\Omega = \{ K, Z \}$</code></p>
 <p><code>$$p(K) = \frac{1}{2}; p(Z) = \frac{1}{2}$$</code></p>
 <p><code>$$\implies I(K) = 2; I(Z) = 2$$</code></p>
@@ -120,7 +139,7 @@
     
         <section >
             
-            <h3>Beispiel</h3>
+            <h3>Beispiel 2</h3>
 <p>Sei <code>$\Omega = \{ K, Z \}$</code></p>
 <p><code>$$p(K) = \frac{1}{3}; p(Z) = \frac{2}{3}$$</code></p>
 <p><code>$$\implies I(K) \approx 1,585; I(Z) = 0,585$$</code></p>
@@ -134,6 +153,16 @@
         <section >
             
             <h2>Entropie</h2>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>Arten von Entropie</h3>
 <ul>
 <li class="fragment">Von-Neumann-Entroie</li>
 <li class="fragment">Thermodynamische Entropie</li>
@@ -154,6 +183,34 @@
 <p>Erwartungswert der Information</p>
 <p><code>$$H(X) = \mathbb{E}_X[I(X)]$$</code></p>
 <p class="fragment"><code>$$H(X) = - \sum_{x \in X}p(x)\log_2p(x)$$</code></p>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>Beispiel 1</h3>
+<p>Sei <code>$\Omega = \{ K, Z \}$</code></p>
+<p><code>$$p(K) = \frac{1}{2}; p(Z) = \frac{1}{2}$$</code></p>
+<p><code>$$\implies I(K) = 2; I(Z) = 2$$</code></p>
+<p><code>$$\implies H(\Omega) = 2 * \frac{1}{2} + 2 * \frac{1}{2} = 1$$</code></p>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>Beispiel 2</h3>
+<p>Sei <code>$\Omega = \{ K, Z \}$</code></p>
+<p><code>$$p(K) = \frac{1}{3}; p(Z) = \frac{2}{3}$$</code></p>
+<p><code>$$\implies I(K) \approx 1,585; I(Z) = 0,585$$</code></p>
+<p><code>$$\implies H(\Omega) \approx \frac{1}{3} * 1,585 + \frac{2}{3} * 0,585 = 0,918$$</code></p>
 
             </section>
     
@@ -205,6 +262,74 @@ höchstens vollkommen irrelevant sein kann. -->
         <section >
             
             <h3>Definition</h3>
+<ul>
+<li class="fragment">Zustandsmenge: <code>$X$</code></li>
+<li class="fragment">Wahrscheinlichkeitsverteilung zu Zeitpunkt <code>$t$</code>: <code>$\vec{P}(t)$</code></li>
+<li class="fragment">Markov-Eigenschaft: <code>$\vec{P}(t+1)$</code> hängt ausschließlich von <code>$\vec{P}(t)$</code> ab</li>
+<li class="fragment">Übergangsmatrix: <code>$A_{ij}$</code></li>
+<li class="fragment">Mastergleichung: <code>$\vec{P}(t+1) = A\vec{P}(t)$</code></li>
+</ul>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>Beispiel</h3>
+<p>Zustandsmenge: <code>$\{A,B,C,D\}$</code></p>
+<pre style="all:unset;"><div><img class="mermaid" src="https://kroki.io/mermaid/svg/eNpLy8kvT85ILCpR8AniUgCC5JzE4mKX1DSF4tzEnBy3_LwShTQgoVucWZVqpWCgZ1GUmgtW6GhlZYVQo6trV2OgY1qj4ASRRAg4gwVcsKg2git3xpA1rFFwAUs5YZOCmgk1x9wUpBgAblM3yQ==" /></div></pre>
+<p><code>$$A = \begin{bmatrix} 0 &amp; 0 &amp; 0 &amp; 0 \\ 0,5 &amp; 0 &amp; 0 &amp; 0,25 \\ 0,5 &amp; 1 &amp; 0 &amp; 0 \\ 0 &amp; 0 &amp; 1 &amp; 0,75 \end{bmatrix}$$</code></p>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <pre style="all:unset;"><div><img class="mermaid" src="https://kroki.io/mermaid/svg/eNpLy8kvT85ILCpR8AniUgCC5JzE4mKX1DSF4tzEnBy3_LwShTQgoVucWZVqpWCgZ1GUmgtW6BhtGAtmOEUbQBjOMIYLiAFRZGVlhTBIV9euxkDHtEbBCSKJEHCG6MOi2giu3BlD1rBGwQXiBGxSUDOh5pibghQDAINMPqY=" /></div></pre>
+<p><code>$\vec{P}(0) = \begin{bmatrix} 1 \\ 0 \\ 0 \\ 0 \end{bmatrix}$</code></p>
+<p><code>$$H(\vec{P}(0)) = 0$$</code></p>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <pre style="all:unset;"><div><img class="mermaid" src="https://kroki.io/mermaid/svg/eNpLy8kvT85ILCpR8AniUgCC5JzE4mKX1DSF4tzEnBy3_LwShTQgoVucWZVqpWCgZ1GUmgtW6BhtEAtmOEUb6JhCmM4IpgtIGqLQysoKYZiurl0NUFGNghNEEiHgDNGHRbURXLkzhqxhjYILxBnYpKBmQs0xNwUpBgBYqz9n" /></div></pre>
+<p><code>$\vec{P}(1) = A \begin{bmatrix} 1 \\ 0 \\ 0 \\ 0 \end{bmatrix} = \begin{bmatrix} 0 \\ 0,5 \\ 0,5 \\ 0 \end{bmatrix}$</code></p>
+<p><code>$$H(\vec{P}(1)) = 1$$</code></p>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <pre style="all:unset;"><div><img class="mermaid" src="https://kroki.io/mermaid/svg/eNpLy8kvT85ILCpR8AniUgCC5JzE4mKX1DSF4tzEnBy3_LwShTQgoVucWZVqpWCgZ1GUmgtW6BhtEAtmOMEYztEGOqYQpguECVFoZWWFMExX164GKFej4ASRRAg4Q3RiUW0EV-6MIWtYo-ACcQY2KaiZUHPMTUGKAVivP2c=" /></div></pre>
+<p><code>$\vec{P}(2) = A^2 \begin{bmatrix} 1 \\ 0 \\ 0 \\ 0 \end{bmatrix} = \begin{bmatrix} 0 \\ 0 \\ 0,5 \\ 0,5 \end{bmatrix}$</code></p>
+<p><code>$$H(\vec{P}(2)) = 1$$</code></p>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <pre style="all:unset;"><div><img class="mermaid" src="https://kroki.io/mermaid/svg/eNpLy8kvT85ILCpR8AniUgCC5JzE4mKX1DSF4tzEnBy3_LwShTQgoVucWZVqpWCgZ1GUmgtW6BhtEAtmOEUb6BgamUI4zjBRF6CohTlQFKLYysoKYaCurl2NgY5pjYITRBIh4AzRi0W1EVy5M4asYY2CC8Qp2KSgZkLNMTcFKQYAO4ZAOQ==" /></div></pre>
+<p><code>$\vec{P}(3) = A^3 \begin{bmatrix} 1 \\ 0 \\ 0 \\ 0 \end{bmatrix} = \begin{bmatrix} 0 \\ 0,125 \\ 0 \\ 0,875 \end{bmatrix}$</code></p>
+<p><code>$$H(\vec{P}(3)) \approx 0,544$$</code></p>
 
             </section>
     
@@ -215,6 +340,7 @@ höchstens vollkommen irrelevant sein kann. -->
         <section >
             
             <h3>Stationäre Verteilung</h3>
+<p>Wahrscheinlichkeitsverteilung <code>$\vec{P}$</code> mit <code>$\vec{P} = A\vec{P}$</code></p>
 
             </section>
     
@@ -359,13 +485,13 @@ höchstens vollkommen irrelevant sein kann. -->
       autoSlide: 0, // TODO fix this to a falseable value
       autoSlideStoppable: true,
       autoSlideMethod: '0',
-      defaultTiming: 120,
+      defaultTiming: 60,
       mouseWheel: false,
       //#previewLinks: false
       //#postMessage: true, // TODO : this can cause issues with the vscode api ???
       //#postMessageEvents: false,
       //#focusBodyOnPageVisibilityChange: true,
-      transition: 'slide',
+      transition: 'none',
       transitionSpeed: 'default',
       backgroundTransition: 'fade',
       //#pdfMaxPagesPerSlide: Number.POSITIVE_INFINITY,

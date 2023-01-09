@@ -1,9 +1,10 @@
 ---
-transition: "slide"
+transition: "none"
 theme: "white"
 slideNumber: false
 enableMenu: false
 enableChalkboard: false
+defaultTiming: 60
 ---
 
 <script src="https://cdn.jsdelivr.net/npm/reveal.js-mermaid-plugin@1.0.0/plugin/mermaid/mermaid.js"></script>
@@ -28,8 +29,9 @@ Theorethische Grundlagen
 
 ## Information
 
+---
 
-'Überraschung' eines Ereignisses
+### Eigenschaften
 
 `$$I: \Omega \to \mathbb{R}_{\geq 0}$$` {.fragment}
 
@@ -41,11 +43,15 @@ Theorethische Grundlagen
 
 `$$A \perp\!\!\!\perp B \implies I(A \cap B) = I(A) + I(B)$$` {.fragment}
 
-`$$I(x) \mapsto - \log_2p(x)$$` {.fragment}
+---
+
+### Definition
+
+`$$I(x) \mapsto - \log_2p(x)$$`
 
 ---
 
-### Beispiel
+### Beispiel 1
 
 Sei `$\Omega = \{ K, Z \}$`
 
@@ -55,7 +61,7 @@ Sei `$\Omega = \{ K, Z \}$`
 
 ---
 
-### Beispiel
+### Beispiel 2
 
 Sei `$\Omega = \{ K, Z \}$`
 
@@ -66,6 +72,10 @@ Sei `$\Omega = \{ K, Z \}$`
 ---
 
 ## Entropie
+
+---
+
+### Arten von Entropie
 
 - Von-Neumann-Entroie {.fragment}
 - Thermodynamische Entropie {.fragment}
@@ -82,6 +92,30 @@ Erwartungswert der Information
 `$$H(X) = \mathbb{E}_X[I(X)]$$`
 
 `$$H(X) = - \sum_{x \in X}p(x)\log_2p(x)$$` {.fragment}
+
+---
+
+### Beispiel 1
+
+Sei `$\Omega = \{ K, Z \}$`
+
+`$$p(K) = \frac{1}{2}; p(Z) = \frac{1}{2}$$`
+
+`$$\implies I(K) = 2; I(Z) = 2$$`
+
+`$$\implies H(\Omega) = 2 * \frac{1}{2} + 2 * \frac{1}{2} = 1$$`
+
+---
+
+### Beispiel 2
+
+Sei `$\Omega = \{ K, Z \}$`
+
+`$$p(K) = \frac{1}{3}; p(Z) = \frac{2}{3}$$`
+
+`$$\implies I(K) \approx 1,585; I(Z) = 0,585$$`
+
+`$$\implies H(\Omega) \approx \frac{1}{3} * 1,585 + \frac{2}{3} * 0,585 = 0,918$$`
 
 ---
 
@@ -117,9 +151,132 @@ Keine Metrik
 
 ### Definition
 
+- Zustandsmenge: `$X$` {.fragment}
+- Wahrscheinlichkeitsverteilung zu Zeitpunkt `$t$`: `$\vec{P}(t)$` {.fragment}
+- Markov-Eigenschaft: `$\vec{P}(t+1)$` hängt ausschließlich von `$\vec{P}(t)$` ab {.fragment}
+- Übergangsmatrix: `$A_{ij}$` {.fragment}
+- Mastergleichung: `$\vec{P}(t+1) = A\vec{P}(t)$` {.fragment}
+
+---
+
+### Beispiel
+
+Zustandsmenge: `$\{A,B,C,D\}$`
+
+```mermaid
+flowchart LR
+    classDef smallFont font-size: 0.8rem
+    A:::smallFont -->|0,5| B
+    A -->|0,5| C
+    D:::smallFont -->|0,25| B
+    C:::smallFont -->|1| D
+    B:::smallFont -->|1| C
+    D -->|0,75| D
+```
+
+`$$A = \begin{bmatrix}
+0 & 0 & 0 & 0 \\
+0,5 & 0 & 0 & 0,25 \\
+0,5 & 1 & 0 & 0 \\
+0 & 0 & 1 & 0,75
+\end{bmatrix}$$`
+
+---
+
+```mermaid
+flowchart LR
+    classDef smallFont font-size: 0.8rem
+    A[1]
+    B[0]
+    C[0]
+    D[0]
+
+    A:::smallFont -->|0,5| B
+    A -->|0,5| C
+    D:::smallFont -->|0,25| B
+    C:::smallFont -->|1| D
+    B:::smallFont -->|1| C
+    D -->|0,75| D
+```
+
+`$\vec{P}(0) = \begin{bmatrix} 1 \\ 0 \\ 0 \\ 0 \end{bmatrix}$`
+
+`$$H(\vec{P}(0)) = 0$$`
+
+---
+
+```mermaid
+flowchart LR
+    classDef smallFont font-size: 0.8rem
+    A[0]
+    B[0,5]
+    C[0,5]
+    D[0]
+
+    A:::smallFont -->|0,5| B
+    A -->|0,5| C
+    D:::smallFont -->|0,25| B
+    C:::smallFont -->|1| D
+    B:::smallFont -->|1| C
+    D -->|0,75| D
+```
+
+`$\vec{P}(1) = A \begin{bmatrix} 1 \\ 0 \\ 0 \\ 0 \end{bmatrix}
+= \begin{bmatrix} 0 \\ 0,5 \\ 0,5 \\ 0 \end{bmatrix}$`
+
+`$$H(\vec{P}(1)) = 1$$`
+
+---
+
+```mermaid
+flowchart LR
+    classDef smallFont font-size: 0.8rem
+    A[0]
+    B[0]
+    C[0,5]
+    D[0,5]
+
+    A:::smallFont -->|0,5| B
+    A -->|0,5| C
+    D:::smallFont -->|0,25| B
+    C:::smallFont -->|1| D
+    B:::smallFont -->|1| C
+    D -->|0,75| D
+```
+
+`$\vec{P}(2) = A^2 \begin{bmatrix} 1 \\ 0 \\ 0 \\ 0 \end{bmatrix}
+= \begin{bmatrix} 0 \\ 0 \\ 0,5 \\ 0,5 \end{bmatrix}$`
+
+`$$H(\vec{P}(2)) = 1$$`
+
+---
+
+```mermaid
+flowchart LR
+    classDef smallFont font-size: 0.8rem
+    A[0]
+    B[0,125]
+    C[0]
+    D[0,875]
+
+    A:::smallFont -->|0,5| B
+    A -->|0,5| C
+    D:::smallFont -->|0,25| B
+    C:::smallFont -->|1| D
+    B:::smallFont -->|1| C
+    D -->|0,75| D
+```
+
+`$\vec{P}(3) = A^3 \begin{bmatrix} 1 \\ 0 \\ 0 \\ 0 \end{bmatrix}
+= \begin{bmatrix} 0 \\ 0,125 \\ 0 \\ 0,875 \end{bmatrix}$`
+
+`$$H(\vec{P}(3)) \approx 0,544$$`
+
 ---
 
 ### Stationäre Verteilung
+
+Wahrscheinlichkeitsverteilung `$\vec{P}$` mit `$\vec{P} = A\vec{P}$`
 
 ---
 
