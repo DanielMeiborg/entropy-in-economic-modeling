@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
 
-  <title>Entropie eines Wirtschaftssystems</title>
+  <title>Reveal JS presentation</title>
 
   <meta name="description" content="A framework for easily creating beautiful presentations using HTML">
   <meta name="author" content="Hakim El Hattab">
@@ -35,7 +35,7 @@
 
   <!-- Revealjs Theme -->
   
-  <link rel="stylesheet" href="libs/reveal.js/4.3.1/theme/simple.css" id="theme">
+  <link rel="stylesheet" href="libs/reveal.js/4.3.1/theme/white.css" id="theme">
   
   
 
@@ -70,7 +70,7 @@
         <section >
             
             <script src="https://cdn.jsdelivr.net/npm/reveal.js-mermaid-plugin@1.0.0/plugin/mermaid/mermaid.js"></script>
-<h2 class="r-fit-text">Entropie eines Wirtschaftssystems</h2>
+<h1 class="r-fit-text">Entropie eines Wirtschaftssystems</h1>
 <p>Theoretische Grundlagen</p>
 
             </section>
@@ -82,16 +82,15 @@
         <section >
             
             <h2>Information</h2>
-
-            </section>
-    
-
-
-
-    
-        <section >
-            
-            <h3>Eigenschaften</h3>
+<ul>
+<li>‘Überraschung’ eines Ereignisses</li>
+<li class="fragment"><code>$I: \Omega \to \mathbb{R}_{\geq 0}$</code></li>
+<li class="fragment"><code>$A, B \in \Omega: p(A) &lt; p(B) \implies I(B) &lt; I(A)$</code></li>
+<li class="fragment"><code>$A \in \Omega: p(A) = 1 \implies I(A) = 0$</code></li>
+<li class="fragment"><code>$A \in \Omega: p(A) \approx 0 \implies I(A) \approx \infty$</code></li>
+<li class="fragment"><code>$A, B \in \Omega: A \perp\!\!\!\perp B \implies I(A \cap B) = I(A) + I(B)$</code></li>
+</ul>
+<p class="fragment"><code>$I(x) \mapsto - \log_2p(x)$$</code></p>
 
             </section>
     

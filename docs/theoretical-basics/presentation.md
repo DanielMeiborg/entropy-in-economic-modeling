@@ -1,15 +1,14 @@
 ---
 transition: "slide"
-theme: simple
+theme: "white"
 slideNumber: false
-title: Entropie eines Wirtschaftssystems
 enableMenu: false
 enableChalkboard: false
 ---
 
 <script src="https://cdn.jsdelivr.net/npm/reveal.js-mermaid-plugin@1.0.0/plugin/mermaid/mermaid.js"></script>
 
-<h2 class="r-fit-text">Entropie eines Wirtschaftssystems</h2>
+# Entropie eines Wirtschaftssystems {.r-fit-text}
 
 Theoretische Grundlagen
 
@@ -17,9 +16,14 @@ Theoretische Grundlagen
 
 ## Information
 
----
+- 'Überraschung' eines Ereignisses
+- `$I: \Omega \to \mathbb{R}_{\geq 0}$` {.fragment}
+- `$A, B \in \Omega: p(A) < p(B) \implies I(B) < I(A)$` {.fragment}
+- `$A \in \Omega: p(A) = 1 \implies I(A) = 0$` {.fragment}
+- `$A \in \Omega: p(A) \approx 0 \implies I(A) \approx \infty$` {.fragment}
+- `$A, B \in \Omega: A \perp\!\!\!\perp B \implies I(A \cap B) = I(A) + I(B)$` {.fragment}
 
-### Eigenschaften
+`$I(x) \mapsto - \log_2p(x)$$` {.fragment}
 
 ---
 
