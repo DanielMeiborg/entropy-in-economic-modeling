@@ -71,8 +71,17 @@
             
             <script src="https://cdn.jsdelivr.net/npm/reveal.js-mermaid-plugin@1.0.0/plugin/mermaid/mermaid.js"></script>
 <h1 class="r-fit-text">Entropie eines Wirtschaftssystems</h1>
-<p>Theoretische Grundlagen</p>
-
+<p>Theorethische Grundlagen</p>
+<figure style="font-size: 20px">
+  <blockquote>
+    <p>
+      You should call it entropy [...] no one really knows what entropy really is, so in a debate you will always have the advantage.
+    </p>
+  </blockquote>
+  <figcaption style="font-size: 15px">
+    John von Neumann zu Claude Shannon, Scientific American Vol. 225 No. 3, (1971)</i>
+  </figcaption>
+</figure>
             </section>
     
 
@@ -82,15 +91,39 @@
         <section >
             
             <h2>Information</h2>
-<ul>
-<li>‘Überraschung’ eines Ereignisses</li>
-<li class="fragment"><code>$I: \Omega \to \mathbb{R}_{\geq 0}$</code></li>
-<li class="fragment"><code>$A, B \in \Omega: p(A) &lt; p(B) \implies I(B) &lt; I(A)$</code></li>
-<li class="fragment"><code>$A \in \Omega: p(A) = 1 \implies I(A) = 0$</code></li>
-<li class="fragment"><code>$A \in \Omega: p(A) \approx 0 \implies I(A) \approx \infty$</code></li>
-<li class="fragment"><code>$A, B \in \Omega: A \perp\!\!\!\perp B \implies I(A \cap B) = I(A) + I(B)$</code></li>
-</ul>
-<p class="fragment"><code>$I(x) \mapsto - \log_2p(x)$$</code></p>
+<p>‘Überraschung’ eines Ereignisses</p>
+<p class="fragment"><code>$$I: \Omega \to \mathbb{R}_{\geq 0}$$</code></p>
+<p class="fragment"><code>$$A, B \in \Omega: p(A) &lt; p(B) \implies I(B) &lt; I(A)$$</code></p>
+<p class="fragment"><code>$$A \in \Omega: p(A) = 1 \implies I(A) = 0$$</code></p>
+<p class="fragment"><code>$$A \in \Omega: p(A) \approx 0 \implies I(A) \approx \infty$$</code></p>
+<p class="fragment"><code>$$A \perp\!\!\!\perp B \implies I(A \cap B) = I(A) + I(B)$$</code></p>
+<p class="fragment"><code>$$I(x) \mapsto - \log_2p(x)$$</code></p>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>Beispiel</h3>
+<p>Sei <code>$\Omega = \{ K, Z \}$</code></p>
+<p><code>$$p(K) = \frac{1}{2}; p(Z) = \frac{1}{2}$$</code></p>
+<p><code>$$\implies I(K) = 2; I(Z) = 2$$</code></p>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>Beispiel</h3>
+<p>Sei <code>$\Omega = \{ K, Z \}$</code></p>
+<p><code>$$p(K) = \frac{1}{3}; p(Z) = \frac{2}{3}$$</code></p>
+<p><code>$$\implies I(K) \approx 1,585; I(Z) = 0,585$$</code></p>
 
             </section>
     
@@ -101,16 +134,13 @@
         <section >
             
             <h2>Entropie</h2>
-
-            </section>
-    
-
-
-
-    
-        <section >
-            
-            <h3>Arten und Anwendung von Entropie</h3>
+<ul>
+<li class="fragment">Von-Neumann-Entroie</li>
+<li class="fragment">Thermodynamische Entropie</li>
+<li class="fragment">Statistische Mechanik</li>
+<li class="fragment">Reaktionsentropie</li>
+<li class="fragment"><mark>Shannon-Entropie</mark></li>
+</ul>
 
             </section>
     
@@ -121,6 +151,9 @@
         <section >
             
             <h3>Definition</h3>
+<p>Erwartungswert der Information</p>
+<p><code>$$H(X) = \mathbb{E}_X[I(X)]$$</code></p>
+<p class="fragment"><code>$$H(X) = - \sum_{x \in X}p(x)\log_2p(x)$$</code></p>
 
             </section>
     
@@ -131,6 +164,13 @@
         <section >
             
             <h3>Bedingte Entropie</h3>
+<!-- Sei $H(X|Y) = \sum_{x,y}p(y)p(x|y)\log_2{p(x|y)}$ die bedingte Entropie von $X$
+unter der Bedingung $Y$. $H(X|Y)$ ist nie größer als $H(X)$ und nur gleich, wenn
+$Y$ vollkommen unabhängig von $X$ ist. Das lässt sich anschaulich so erklären,
+dass zusätzliche Information ($Y$) nicht Wissen über $X$ zerstören kann, sondern
+höchstens vollkommen irrelevant sein kann. -->
+<p><code>$$H(X|Y) = \sum_{x,y}p(y)p(x|y)\log_2{p(x|y)}$$</code></p>
+<p>Entropie von <code>$X$</code> mit der gegebenen Information über <code>$Y$</code></p>
 
             </section>
     
@@ -141,6 +181,10 @@
         <section >
             
             <h3>Relative Entropie</h3>
+<p>Maß für Unterschiedlichkeit zweier Wahrscheinlichkeitsverteilungen $p$ und $r$</p>
+<p><code>$$D(p||r) = \sum_x p(x)\log_2{\frac{p(x)}{r(x)}}$$</code></p>
+<p><code>$$D(p||r) \ge 0$$</code></p>
+<p>Keine Metrik</p>
 
             </section>
     
@@ -201,16 +245,6 @@
         <section >
             
             <h3>$H(X_0|X_{-\infty}^{-n})$ steigt monoton</h3>
-
-            </section>
-    
-
-
-
-    
-        <section >
-            
-            <h2>Quellen</h2>
 
             </section>
     

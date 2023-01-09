@@ -89,7 +89,7 @@ Systems.
 
 Nehmen wir wieder das Beispiel mit der Münze: Bei der fairen Münze ist die
 Entropie $\frac{1+1}{2} = 1$ Bit. Bei der nicht-fairen Münze ist die Entropie
-$\frac{1,585 \cdot 1/3 + 0,585 \cdot 2/3}{2} \approx 0,459$ Bit. Die Entropie
+$1,585 \cdot 1/3 + 0,585 \cdot 2/3 \approx 0,918$ Bit. Die Entropie
 ist also niedriger als bei der Einheitsverteilung. Diese Tatsache gilt für alle
 Wahrscheinlichkeiten i.e. die Einheitsverteilung hat immer die höchste Entropie.
 Verteilungen, bei denen nur ein einziger Zustand möglich ist, haben die
