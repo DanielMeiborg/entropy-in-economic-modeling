@@ -360,7 +360,8 @@ höchstens vollkommen irrelevant sein kann. -->
     
         <section >
             
-            <h3>$H(X_n)$ steigt monoton</h3>
+            <h3>Allgemeine Formulierung</h3>
+<p><em>Entropie kann in einem geschlossenem thermodynamischen System nicht abnehmen</em></p>
 
             </section>
     
@@ -370,7 +371,47 @@ höchstens vollkommen irrelevant sein kann. -->
     
         <section >
             
-            <h3>$H(X_0|X_{-\infty}^{-n})$ steigt monoton</h3>
+            <p><strong>$H(X_n)$ steigt monoton für alle endlichen diskreten Markov-Prozesse, wenn die
+stationäre Verteilung die Einheitsverteilung ist.</strong></p>
+<p>Anzahl an möglichen Zuständen: <code>$m$</code></p>
+<p><code>$$D(\vec{P}(t)||\vec{P}) = \sum_x \vec{P}_x(t) \cdot log_2(\frac{\vec{P}_x(t)}{1/m})$$</code></p>
+<p class="fragment"><code>$$ = -H(\vec{P}(t)) + log_2(m)$$</code></p>
+<p class="fragment"><code>$D(\mu_n||\mu)$</code> sinkt monoton <code>$\implies $</code> <code>$H(\mu_n)$</code> steigt monoton</p>
+<div style="font-size: 20px" class="fragment">T. M. Cover and J. Halliwell,
+“Which processes satisfy the secondlaw”, Cambridge University Press New York, NY, pp. 98–107, 1994.</div>
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>Erläuterung</h3>
+<p>Keine Information zu <code>$t=0 \implies$</code> keine Information zu <code>$t=n$</code></p>
+<p><code>$x$</code> Information zu <code>$t=n \implies$</code> zu <code>$t=n+1$</code> nicht mehr Information</p>
+
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>Beispiel 1</h3>
+<p class="r-stretch"><img src="thermodynamics.svg" alt=""></p>
+<div style="font-size: 20px">H. Hinrichsen, “Entropie als Informationsmaß”, Universität Würzburg</div>
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <h3>Beispiel 2</h3>
+<p class="r-stretch"><img src="random-walk.png" alt=""></p>
 
             </section>
     
@@ -485,7 +526,7 @@ höchstens vollkommen irrelevant sein kann. -->
       autoSlide: 0, // TODO fix this to a falseable value
       autoSlideStoppable: true,
       autoSlideMethod: '0',
-      defaultTiming: 60,
+      defaultTiming: 45,
       mouseWheel: false,
       //#previewLinks: false
       //#postMessage: true, // TODO : this can cause issues with the vscode api ???

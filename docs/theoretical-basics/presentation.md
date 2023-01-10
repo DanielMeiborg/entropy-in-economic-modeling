@@ -4,7 +4,7 @@ theme: "white"
 slideNumber: false
 enableMenu: false
 enableChalkboard: false
-defaultTiming: 60
+defaultTiming: 45
 ---
 
 <script src="https://cdn.jsdelivr.net/npm/reveal.js-mermaid-plugin@1.0.0/plugin/mermaid/mermaid.js"></script>
@@ -284,8 +284,44 @@ Wahrscheinlichkeitsverteilung `$\vec{P}$` mit `$\vec{P} = A\vec{P}$`
 
 ---
 
-### $H(X_n)$ steigt monoton
+### Allgemeine Formulierung
+
+*Entropie kann in einem geschlossenem thermodynamischen System nicht abnehmen*
 
 ---
 
-### $H(X_0|X_{-\infty}^{-n})$ steigt monoton
+**$H(X_n)$ steigt monoton für alle endlichen diskreten Markov-Prozesse, wenn die
+stationäre Verteilung die Einheitsverteilung ist.**
+
+Anzahl an möglichen Zuständen: `$m$`
+
+`$$D(\vec{P}(t)||\vec{P}) = \sum_x \vec{P}_x(t) \cdot log_2(\frac{\vec{P}_x(t)}{1/m})$$`
+
+`$$ = -H(\vec{P}(t)) + log_2(m)$$` {.fragment}
+
+`$D(\mu_n||\mu)$` sinkt monoton `$\implies $` `$H(\mu_n)$` steigt monoton {.fragment}
+
+<div style="font-size: 20px" class="fragment">T. M. Cover and J. Halliwell,
+“Which processes satisfy the secondlaw”, Cambridge University Press New York, NY, pp. 98–107, 1994.</div>
+
+---
+
+### Erläuterung
+
+Keine Information zu `$t=0 \implies$` keine Information zu `$t=n$`
+
+`$x$` Information zu `$t=n \implies$` zu `$t=n+1$` nicht mehr Information
+
+---
+
+### Beispiel 1
+
+![](thermodynamics.svg) {.r-stretch}
+
+<div style="font-size: 20px">H. Hinrichsen, “Entropie als Informationsmaß”, Universität Würzburg</div>
+
+---
+
+### Beispiel 2
+
+![](random-walk.png) {.r-stretch}
