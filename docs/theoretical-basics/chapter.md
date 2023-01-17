@@ -95,6 +95,17 @@ Wahrscheinlichkeiten i.e. die Einheitsverteilung hat immer die höchste Entropie
 Verteilungen, bei denen nur ein einziger Zustand möglich ist, haben die
 niedrigste mögliche Entropie von $0$.
 
+Ein anderes Beispiel: Folgendes Diagramm stellt die Verteilung von Energie in
+zwei Körpern dar. Ein Körper besteht hier aus zwei Partikeln, die jeweils eien
+Einheit Energie besitzen können. Auf der linken Seite sieht man die Menge an
+Energieeinheiten (rot = 2, grün = 1, blau = 0), die die beiden Partikel
+besitzen. Rechts sind die möglichen Zustände aufgelistet (Kreuz = hat eine
+Einheit Energie). Für eine gleichmäßige Verteilung der Energie zwischen den
+beiden Körpern gibt es mehr Möglichkeiten, also eine höhere Entropie (hier 2
+bit). Eine ungleiche Verteilung hat dagegen eine niedrige Entropie (hier 0 bit).
+
+![](thermodynamics.png)
+
 ## Bedingte Entropie
 
 Sei $H(X|Y) = \sum_{x,y}p(y)p(x|y)\log_2{p(x|y)}$ die bedingte Entropie von $X$
@@ -130,6 +141,10 @@ Sei A die Übergangsmatrix mit $A_{ij}$ als Wahrscheinlichkeit, dass Zustand $j$
 in Zustand $i$ übergeht, und $\vec{P}(t)$ die Wahrscheinlichkeiten der Zustände
 zu Zeitpunkt $t$ in Vektorform. Dann lautet die sogenannte Mastergleichung
 $\vec{P}(t + 1) = A\vec{P}(t)$.
+
+## Beispiel
+
+![](markov-chain.png)
 
 ## Stationäre Verteilung
 
