@@ -1,8 +1,4 @@
 ---
-title: Theorie SIA-Arbeit
-subtitle: ENTROPIE EINES WIRTSCHAFTSSYSTEMS
-author: Daniel Meiborg
-date: Januar 2023
 bibliography: [../main.bib]
 csl: ../ieee-with-url.csl
 link-citations: true
@@ -11,7 +7,37 @@ fontsize: 12pt
 header-includes: \usepackage[german]{babel}
 ---
 
-\maketitle
+\begin{titlepage}
+    \begin{center}
+        \vspace*{1cm}
+
+        \textbf{Theorethische Grundlagen SIA}
+        \vspace{0.5cm}
+
+        ENTROPIE EINES WIRTSCHAFTSSYSTEMS
+        \vspace{1.5cm}
+
+        \textbf{Daniel Meiborg}
+        \vfill
+
+        SIA - Schüler-Ingenieur-Akademie
+
+        \vspace{0.8cm}
+
+
+        \includegraphics[width=\textwidth]{../logo-birklehof.jpg}
+        \includegraphics[width=\textwidth]{../logo-sia.jpg}
+
+        \vspace{0.8cm}
+
+        Hr. Vogelgesang
+
+        Schule Birklehof e.V.
+
+        2022/2023
+    \end{center}
+\end{titlepage}
+
 \newpage
 \renewcommand{\contentsname}{Inhaltsverzeichnis}
 \tableofcontents
