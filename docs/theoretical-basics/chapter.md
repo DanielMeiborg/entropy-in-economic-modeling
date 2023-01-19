@@ -1,17 +1,43 @@
 ---
-title: Theorie SIA-Arbeit
-subtitle: ENTROPIE EINES WIRTSCHAFTSSYSTEMS
-author: Daniel Meiborg
-date: Januar 2023
-bibliography: [./main.bib]
-csl: ieee-with-url.csl
+bibliography: [../main.bib]
+csl: ../ieee-with-url.csl
 link-citations: true
 documentclass: article
 fontsize: 12pt
 header-includes: \usepackage[german]{babel}
 ---
 
-\maketitle
+\begin{titlepage}
+    \begin{center}
+        \vspace*{1cm}
+
+        \textbf{Theorethische Grundlagen SIA}
+        \vspace{0.5cm}
+
+        ENTROPIE EINES WIRTSCHAFTSSYSTEMS
+        \vspace{1.5cm}
+
+        \textbf{Daniel Meiborg}
+        \vfill
+
+        SIA - Schüler-Ingenieur-Akademie
+
+        \vspace{0.8cm}
+
+
+        \includegraphics[width=\textwidth]{../logo-birklehof.jpg}
+        \includegraphics[width=\textwidth]{../logo-sia.jpg}
+
+        \vspace{0.8cm}
+
+        Hr. Vogelgesang
+
+        Schule Birklehof e.V.
+
+        2022/2023
+    \end{center}
+\end{titlepage}
+
 \newpage
 \renewcommand{\contentsname}{Inhaltsverzeichnis}
 \tableofcontents
@@ -89,11 +115,22 @@ Systems.
 
 Nehmen wir wieder das Beispiel mit der Münze: Bei der fairen Münze ist die
 Entropie $\frac{1+1}{2} = 1$ Bit. Bei der nicht-fairen Münze ist die Entropie
-$\frac{1,585 \cdot 1/3 + 0,585 \cdot 2/3}{2} \approx 0,459$ Bit. Die Entropie
+$1,585 \cdot 1/3 + 0,585 \cdot 2/3 \approx 0,918$ Bit. Die Entropie
 ist also niedriger als bei der Einheitsverteilung. Diese Tatsache gilt für alle
 Wahrscheinlichkeiten i.e. die Einheitsverteilung hat immer die höchste Entropie.
 Verteilungen, bei denen nur ein einziger Zustand möglich ist, haben die
 niedrigste mögliche Entropie von $0$.
+
+Ein anderes Beispiel: Folgendes Diagramm stellt die Verteilung von Energie in
+zwei Körpern dar. Ein Körper besteht hier aus zwei Partikeln, die jeweils eien
+Einheit Energie besitzen können. Auf der linken Seite sieht man die Menge an
+Energieeinheiten (rot = 2, grün = 1, blau = 0), die die beiden Partikel
+besitzen. Rechts sind die möglichen Zustände aufgelistet (Kreuz = hat eine
+Einheit Energie). Für eine gleichmäßige Verteilung der Energie zwischen den
+beiden Körpern gibt es mehr Möglichkeiten, also eine höhere Entropie (hier 2
+bit). Eine ungleiche Verteilung hat dagegen eine niedrige Entropie (hier 0 bit).
+
+![](thermodynamics.png)
 
 ## Bedingte Entropie
 
@@ -131,12 +168,15 @@ in Zustand $i$ übergeht, und $\vec{P}(t)$ die Wahrscheinlichkeiten der Zuständ
 zu Zeitpunkt $t$ in Vektorform. Dann lautet die sogenannte Mastergleichung
 $\vec{P}(t + 1) = A\vec{P}(t)$.
 
+## Beispiel
+
+![](markov-chain.png)
+
 ## Stationäre Verteilung
 
 Die stationäre Wahrscheinlichkeitsverteilung eines Markov-Prozesses ist die
 Verteilung $\vec{P}$, die erfüllt, dass $\vec{P} = A\vec{P}$. Die stationäre
-Verteilung ist ein Gleichgewichtszustand des Prozesses. $\vec{P}$ ist also ein
-Eigenvektor von $A$ mit Eigenwert $1$.
+Verteilung ist ein Gleichgewichtszustand des Prozesses.
 
 # Zweiter Hauptsatz der Thermodynamik
 
