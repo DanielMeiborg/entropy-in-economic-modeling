@@ -30,7 +30,7 @@ header-includes: \usepackage[german]{babel}
 
         \vspace{0.8cm}
 
-        Hr. Vogelgesang
+        Frau Dr. Hardung, Herr Dr. Itzen, Hr. Vogelgesang
 
         Schule Birklehof e.V.
 
@@ -130,7 +130,9 @@ Einheit Energie). Für eine gleichmäßige Verteilung der Energie zwischen den
 beiden Körpern gibt es mehr Möglichkeiten, also eine höhere Entropie (hier 2
 bit). Eine ungleiche Verteilung hat dagegen eine niedrige Entropie (hier 0 bit).
 
-![](thermodynamics.png)
+\begin{center}
+    \includegraphics[width=0.8\textwidth]{thermodynamics.png}
+\end{center}
 
 ## Bedingte Entropie
 
