@@ -11,10 +11,10 @@ header-includes: \usepackage[german]{babel}
     \begin{center}
         \vspace*{1cm}
 
-        \textbf{Theorethische Grundlagen SIA}
+        \textbf{ENTROPIE EINES WIRTSCHAFTSSYSTEMS}
         \vspace{0.5cm}
 
-        ENTROPIE EINES WIRTSCHAFTSSYSTEMS
+        Theorethische Grundlagen
         \vspace{1.5cm}
 
         \textbf{Daniel Meiborg}
