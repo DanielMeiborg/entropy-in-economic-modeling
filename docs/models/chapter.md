@@ -55,10 +55,9 @@ grundlegenden Konzepts auf ökonomische Strukturen genauer zu untersuchen.
 Eine grundlegende Methode der Wissenschaft besteht darin, komplexe Phänomene zu
 vereinfachen und in mathematische Modelle zu überführen. In den
 Wirtschaftswissenschaften gibt es zahlreiche Modelle, die dazu dienen,
-wirtschaftliche Zusammenhänge abzubilden. Für die in dieser Arbeit betrachteten
-und entwickelten Modelle ist es somit entscheidend, dass sie den zweiten
-Hauptsatz der Thermodynamik erfüllen. In diesem Kapitel werde ich verschiedene
-Ansätze vorstellen, um Modelle zu entwickeln, die dieses Kriterium erfüllen.
+wirtschaftliche Zusammenhänge abzubilden. Die in dieser Arbeit betrachteten und
+entwickelten Modelle müssen daher den zweiten Hauptsatz der Thermodynamik
+erfüllen. In diesem Kapitel werden dazu verschiedene Ansätze präsentiert.
 
 ## Ausgleichsterme
 
@@ -194,7 +193,7 @@ Raumtemperatur also mindestens $E = k_B \cdot 295K \cdot \text{ln}(2) \approx
 8,469 \cdot 10^{-21}J$, die in Wärme konvertiert werden müssen. Bei einem Preis
 von etwa $0,33 \frac{€}{\text{kWh}}$ 2022 in Deutschland
 [@destatis2022electricity] sind das etwa $8,469 \cdot 10^{-21}J \cdot 0,33 \cdot
-3,6 \cdot 10^{6} \frac{€}{J} \approx 1,006 \cdot 10^{-14}€$, die der Ausgang
+3,6 \cdot 10^{-6} \frac{€}{J} \approx 1,006 \cdot 10^{-26}€$, die der Ausgang
 mindestens wert ist. So könnte man in einer Gesellschaft prinzipiell Information
 als tatsächlichen Wertgegenstand einsetzen.
 
