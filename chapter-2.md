@@ -1,6 +1,6 @@
 ---
-bibliography: [../main.bib]
-csl: ../ieee-with-url.csl
+bibliography: [./main.bib]
+csl: ./ieee-with-url.csl
 link-citations: true
 documentclass: article
 fontsize: 12pt

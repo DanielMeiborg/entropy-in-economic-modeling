@@ -1,6 +1,6 @@
 ---
-bibliography: [../main.bib]
-csl: ../ieee-with-url.csl
+bibliography: [./main.bib]
+csl: ./ieee-with-url.csl
 link-citations: true
 documentclass: article
 fontsize: 12pt
@@ -131,7 +131,7 @@ beiden Körpern gibt es mehr Möglichkeiten, also eine höhere Entropie (hier 2
 bit). Eine ungleiche Verteilung hat dagegen eine niedrige Entropie (hier 0 bit).
 
 \begin{center}
-    \includegraphics[width=0.8\textwidth]{thermodynamics.png}
+    \includegraphics[width=0.8\textwidth]{./assets/thermodynamics.png}
 \end{center}
 
 ## Bedingte Entropie
@@ -172,7 +172,7 @@ $\vec{P}(t + 1) = A\vec{P}(t)$.
 
 ## Beispiel
 
-![](markov-chain.png)
+![](./assets/markov-chain.png)
 
 ## Stationäre Verteilung
 
