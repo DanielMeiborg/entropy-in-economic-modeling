@@ -48,7 +48,7 @@ header-includes: \usepackage[german]{babel}
 
 Die Gültigkeit des zweiten Hauptsatzes der Thermodynamik für physikalische
 Prozesse ist allgemein anerkannt. Wie bereits im ersten Kapitel erläutert, lässt
-sich dieser Satz auch allgemein für eine Gruppe an stochastischen Prozessen
+sich dieser Satz auch allgemein für eine Gruppe von stochastischen Prozessen
 beweisen. Aus diesem Grund ist es von Bedeutung, die Anwendbarkeit dieses so
 grundlegenden Konzepts auf ökonomische Strukturen genauer zu untersuchen.
 
@@ -67,9 +67,9 @@ Sachverhalt zu erstellen, dass dieser Markov-Prozess den zweiten Hauptsatz der
 Thermodynamik erfüllt. Nachdem das ein Spezialfall von Markov-Prozessen ist, ist
 es unwahrscheinlich, dass der erste Versuch dieses Kriterium erfüllt. Aus diesem
 Grund kann man Ausgleichsterme einführen. Diese dienen dazu, das Modell so
-anzupassen, sodass es sowohl die Realität als auch den zweiten Hauptsatz der
+anzupassen, dass es sowohl die Realität als auch den zweiten Hauptsatz der
 Thermodynamik erfüllt. Für physikalische Prozesse werden als negative
-Entropiequelle (Ein Teil eines Systems, dessen Entropie erhöht wird, um die
+Entropiequelle (ein Teil eines Systems, dessen Entropie erhöht wird, um die
 eines anderen zu verringern) häufig große Temperaturunterschiede wie z.B. in
 einem Motor benutzt. Allgemein kann konkrete Information als solche betrachtet
 werden. Weitere Beispiele dafür befinden sich im Abschnitt [Atomare
@@ -80,10 +80,9 @@ Operationen](#atomare-operationen).
 Bei einem agentenbasierten Markov-Prozess versucht man, ökonomische Agenten
 (Staat, Banken etc.) annähernd zu modellieren. Agenten sind hier im Sinne der
 Spieltheorie als Entitäten, die mit ihrer Umwelt agieren können, zu verstehen.
-Der erste Schritt ist hier das Verhalten einzelnen Agenten mithilfe von z.B.
-Entscheidungsdiagrammen (siehe
-[Beispiel](#beispiel)) in
-eine Form zu übersetzen, die sich dann weiterverarbeiten lässt.
+Der erste Schritt ist hier das Verhalten einzelner Agenten z.B. mithilfe von
+Entscheidungsdiagrammen (siehe [Beispiel](#beispiel)) in eine Form zu
+übersetzen, die sich dann weiterverarbeiten lässt.
 
 Im nächsten Schritt muss dieses Modell dann in einen Markov-Prozess umgewandelt
 werden. Eine dazu vom Autor konzipierte und entwickelte Bibliothek ist
@@ -93,7 +92,7 @@ Dieser Markov-Prozess lässt sich dann vergleichsweise einfach simulieren. Aus
 der daraus zu berechnenden Entropie (siehe [Entropie](#entropie)) oder direkt
 aus der Übergangswahrscheinlichkeitsmatrix kann man nun berechnen, ob der zweite
 Hauptsatz der Thermodynamik gilt. Falls das nicht der Fall ist, muss man
-dementsprechend muss man das Ausgangsmodell sukzessive anpassen.
+dementsprechend man das Ausgangsmodell sukzessive anpassen.
 
 ### Entropie
 
@@ -104,15 +103,15 @@ auch alle anderen auf Markov-Prozessen basierenden hier vorgestellten Modelle.
 
 ### Beispiel
 
-Im Folgenden ist ein Diagramm zu sehen, was vereinfacht mögliche Zustände eines
+Im Folgenden ist ein Diagramm zu sehen, das vereinfacht mögliche Zustände eines
 Kaufprozesses auf der Seite des Käufers und die jeweiligen
 Übergangswahrscheinlichkeiten darstellt. ‘Stabil’ bezeichnet hier den
 Ausgangszustand. In diesem Szenario entschließt sich der Agent von Zeit zu Zeit,
 ein Produkt zu kaufen, und erfährt dabei ab und zu Betrug. Das führt dann dazu,
-dass er für eine Zeit lang im ‘Abbruch’ Zustand feststeckt, d.h. aufgrund der
+dass er für eine Zeit lang im Zustand ‘Abbruch’ feststeckt, d.h. aufgrund der
 Betrugserfahrung vorsichtiger ist.
 
-![Beispiel agentenbasierter Markov-Prozess Modell, eigene Abbildung](assets/actor-model.png)
+![Beispiel eines Modells für agentenbasierte Markov-Prozesse, eigene Abbildung](assets/actor-model.png)
 
 
 ### Vorteile
@@ -129,7 +128,7 @@ Auch bei sehr simplen Systemen muss eine Vielzahl an Parametern willkürlich
 gesetzt werden, da die Datenlage und die Verarbeitungskapazität in der Regel
 sehr limitiert sind. Des weiteren sind die Ausgleichsterme in Vergleich zu den
 folgenden Ansätzen schwieriger zu implementieren, da sie erfordern, dass
-entweder neue Agenten hinzukommen, oder bisherige ihre Entscheidungen radikal
+entweder neue Agenten hinzukommen oder bisherige ihre Entscheidungen radikal
 verändern, was die Aussagekraft des Modells weiter beeinträchtigt.
 
 ## Diffusionsbasierter Markov-Prozess
@@ -144,11 +143,11 @@ so zwischen verschiedenen Agenten diffundieren.
 
 ### Beispiel
 
-Auf diesem Diagramm sind schematische Beziehungen zwischen ökonomischen
+In diesem Diagramm sind schematische Beziehungen zwischen ökonomischen
 Entitäten zu sehen. Im nächsten Schritt müssen hier Wahrscheinlichkeiten für
 Diffusion und Quantitäten angegeben werden.
 
-![Beispiel diffusionsbasierter Markov-Prozess Modell, eigene Abbildung](assets/diffusion-model.png)
+![Beispiel eines Modells für diffusionsbasierte Markov-Prozesse, eigene Abbildung](assets/diffusion-model.png)
 
 ### Vorteile
 
@@ -170,21 +169,21 @@ Ansätzen abgewogen werden.
 Der nächste Ansatz besteht darin, lediglich diejenigen Teile der Wirtschaft zu
 betrachten, die sich  selbst mit Wahrscheinlichkeiten beschäftigen. Dieses
 breite Feld umfasst alles von Versicherungen, Glücksspiel bis hin zu
-Kryptowährungen. Hier können sowohl reale Systeme betrachtet werden, als auch
+Kryptowährungen. Hier können sowohl reale Systeme betrachtet werden als auch
 fiktive Wirtschaftssysteme, in denen beispielsweise reine Information eine
 Währung ist.
 
 ### Beispiel
 
 Ein Beispiel dafür ist ein virtuelles Pferderennen: In diesem ist die einzige
-Information, die das ansonsten geschlossene System (z.B. ein Computer) verlässt,
-der (eindeutige) Gewinner. Bei 8 Pferden sind das 3 Bit Information. Vor Beginn
-des Zufallsexperiments gibt es also 3 Bit Ungewissheit; danach sind es 0 Bit
-(auf das Pferderennen bezogen). Nun kann man einen Markov-Prozess aus dem
-Pferderennen und Umgebung erstellen. Um diesen nach dem zweiten Hauptsatz zu
+Information, die das ansonsten geschlossene System (z.B. einen Computer)
+verlässt, der (eindeutige) Gewinner. Bei 8 Pferden sind das 3 Bit Information.
+Vor Beginn des Zufallsexperiments gibt es also 3 Bit Ungewissheit; danach sind
+es 0 Bit (auf das Pferderennen bezogen). Nun kann man einen Markov-Prozess aus
+dem Pferderennen und Umgebung erstellen. Um diesen nach dem zweiten Hauptsatz zu
 modellieren (der, unseres Wissens nach, auf die Physik zutrifft), muss diese
-Pferderennen-Simulation dabei an mindestens 3 Bit Entropie zunehmen. Anhand des
-Landauer Prinzips lässt sich ein Minimum an Energie festlegen, welches benötigt
+Pferderennen-Simulation dabei mindestens an 3 Bit Entropie zunehmen. Anhand des
+Landauer-Prinzips lässt sich ein Minimum an Energie festlegen, welches benötigt
 wird, um ein einzelnes Bit zu löschen. Dieses Minimum wird nach Landauer
 [@landauer1961limit] mithilfe folgender Formel berechnet: $E = k_BT\ln(2)$,
 wobei $k_B$ der Boltzmann-Konstante entspricht. Ein Bit entspricht bei
@@ -193,9 +192,9 @@ Raumtemperatur also mindestens $E = k_B \cdot 295K \cdot \text{ln}(2) \approx
 8,469 \cdot 10^{-21}J$, die in Wärme konvertiert werden müssen. Bei einem Preis
 von etwa $0,33 \frac{€}{\text{kWh}}$ 2022 in Deutschland
 [@destatis2022electricity] sind das etwa $8,469 \cdot 10^{-21}J \cdot 0,33 \cdot
-3,6 \cdot 10^{-6} \frac{€}{J} \approx 1,006 \cdot 10^{-26}€$, die der Ausgang
-mindestens wert ist. So könnte man in einer Gesellschaft prinzipiell Information
-als tatsächlichen Wertgegenstand einsetzen.
+3,6 \cdot 10^{-6} \frac{€}{J} \approx 10^{-26}€$, die der Ausgang mindestens
+wert ist. So könnte man in einer Gesellschaft prinzipiell Information als
+tatsächlichen Wertgegenstand einsetzen.
 
 ### Vorteile
 
@@ -260,12 +259,12 @@ Systems in einem frei erfundenen XML-Dialekt zu sehen.
 
 ### Evolutionäre Algorithmen
 
-Optional kann man den so berechneten Informationsgehalt mit beispielsweise
+Optional kann man den so berechneten beispielsweise Informationsgehalt mit
 evolutionären Algorithmen kombinieren, um eine Veränderung der
-Wahrscheinlichkeiten über Zeit zu erhalten. Hier würde man verschiedener solcher
-Systeme mutieren lassen, und die Veränderung der Entropie betrachte. Da zu
-Beginn alle möglichen Systeme als gleich wahrscheinlich angenommen werden, sinkt
-demnach die Entropie, wenn sich einzelne Wirtschaftssysteme als effektiver
+Wahrscheinlichkeiten über die Zeit zu erhalten. Hier würde man verschiedene
+solcher Systeme mutieren lassen und die Veränderung der Entropie betrachten. Da
+zu Beginn alle möglichen Systeme als gleich wahrscheinlich angenommen werden,
+sinkt demnach die Entropie, wenn sich einzelne Wirtschaftssysteme als effektiver
 herausstellen. Wie in dem Beispiel für entropiebasierte Wirtschaftssysteme
 illustriert, lässt sich daraus auch die Menge an Information bzw. Energie
 berechnen, die dafür aufgewendet werden muss. Voraussetzung dafür ist
@@ -304,37 +303,37 @@ haben eine Wahrscheinlichkeit von $\frac{1}{3}$ und damit die Entropie $H(X_0) =
 \text{ld}(3)$. Zum Zeitpunkt $t=1$ wechseln diese Zustände zufällig entweder zu
 P1 oder P2. Die Entropie ist somit $H(X_0) = \text{ld}(2) = 1 \text{bit}$.
 
-![Beispiel atomare Operationen Modell, Basismodell Produktion, eigene Abbildung](assets/basics-basis.png)
+![Beispiel eines Modells für atomare Operationen, eigene Abbildung](assets/basics-basis.png)
 
 Um den zweiten Hauptsatz der Thermodynamik zu erfüllen, kann man nun das Modell
 auf mehrere Arten erweitern. Eine solche Möglichkeit ist die Einführung von
 Energie als Edukt (z.B. in Form von Photonen). Hier ist es wichtig zu beachten,
-dass ein R1, R2, R3 und E1 keine getrennten Zustände sind, die die Edukte
-einnehmen können, sondern ein konkreter Zustand des Markov-Prozesses aus der
-Kombination (R1, E1), (R2, E1) oder (R3, E1) besteht. Dementsprechend bleibt die
+dass R1, R2, R3 und E1 keine getrennten Zustände sind, die die Edukte einnehmen
+können, sondern ein konkreter Zustand des Markov-Prozesses aus der Kombination
+(R1, E1), (R2, E1) oder (R3, E1) besteht. Dementsprechend bleibt die
 Gesamtentropie von $X_0$ gleich. Basis für die Annahme der geringen Anzahl an
-Zuständen der ‘Energie’ ist, dass es weniger Zustände für beispielsweise
-Photonen gibt (um genau zu sein $H = k(1-\ln(f_r)$ mit $f_r$ die
-Photonenverteilung und $k$ die Boltzmann-Konstante [@kirwan2004photons]) als für
+Zuständen der ‘Energie’ ist, dass es weniger Zustände beispielsweise für
+Photonen gibt (um genau zu sein $H = k(1-\ln(f_r))$; $f_r$ entspricht der
+Photonenverteilung und $k$ der Boltzmann-Konstante [@kirwan2004photons]) als für
 eine bestimmte Menge z.B. eines idealen Gases. Die Zugabe von Energie bedingt
 i.d.R. eine höhere Quantität an Produkten. In diesem Beispiel wird angenommen,
-dass es dadurch doppelt so viele Teile an Produkt gibt wie davor. Da es für
-einen einzelnen Teil bereits 2 Zustände gibt, gibt es für den Komplex aus beiden
-somit 4 mögliche Zustände: (P1_1, P2_1), (P1_1, P2_2), (P1_2, P2_1), (P1_2,
-P2_2). Die Entropie beträgt damit $H(X_1) = \text{ld}(4) = 2 \text{bit}$.
+dass sich die Anzahl an Produktteilen dadurch verdoppelt. Da es für einen
+einzelnen Teil bereits 2 Zustände gibt, gibt es für den Komplex aus beiden somit
+4 mögliche Zustände: (P1_1, P2_1), (P1_1, P2_2), (P1_2, P2_1), (P1_2, P2_2). Die
+Entropie beträgt damit $H(X_1) = \text{ld}(4) = 2 \text{bit}$.
 
-![Beispiel atomare Operationen Modell, Modell Produktion mit Energie, eigene Abbildung](assets/basics-energy.png)
+![Beispiel eines Modells für atomare Operationen, Produktion mit Energie, eigene Abbildung](assets/basics-energy.png)
 
 Eine andere Möglichkeit ist Abfall. Dabei wird angenommen, dass bei der
 Produktion eine gewisse Menge an undefinierbarem Abfall entsteht. Undefinierbar
 meint hier, dass man bei der Produktion nicht darauf achtet, eine bestimmte Art
-von Abfall zu produzieren, sondern irgendetwas sein kann. Somit hat dieser hier
-eine hohe Anzahl an möglichen Zuständen (willkürlich gewählt 5). Das
+von Abfall zu produzieren, sondern der Abfall irgendetwas sein kann. Somit hat
+dieser hier eine hohe Anzahl an möglichen Zuständen (willkürlich gewählt 5). Das
 Entropieverhältnis ist hier also $H(X_0) = \text{ld}(3) \approx 1,585
 \text{bit}$ und $H(X_1) = \text{ld}(2 \cdot 5) = \text{ld}(2) + \text{ld}(5)
 \approx 3,322 \text{bit}$.
 
-![Beispiel atomare Operationen Modell, Modell Produktion mit Abfall, eigene Abbildung](assets/basics-trash.png)
+![Beispiel eines Modells für atomare Operationen, Produktion mit Abfall, eigene Abbildung](assets/basics-trash.png)
 
 ### Vorteile
 
