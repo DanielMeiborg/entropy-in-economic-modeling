@@ -1,4 +1,1 @@
-# SIA
-
-My Schüler-Ingenieur-Akademie (scholar-engineer-acadamy) project: Entropy of an
-economy. See docs for details.
+The applicability of the second law of thermodynamics to economic systems: Development and comparison of modeling techniques.
