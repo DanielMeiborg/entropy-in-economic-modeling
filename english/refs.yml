@@ -1,0 +1,70 @@
+cover1994processes:
+  type: Article
+  author:
+    - Cover, Thomas M
+    - Halliwell, J
+  title: "Which processes satisfy the second law"
+  publisher: "Cambridge University Press New York, NY"
+  date: 1994
+  url: https://www-fourier.ujf-grenoble.fr/~faure/enseignement/phys-stat/documents/94_Cover_which_process_satistfy_second_law.pdf
+
+tribus1971information:
+  type: Article
+  author:
+    - Myron Tribus
+    - Edward C. McIrvine
+  publisher: "Scientific American"
+  title: "Energy and Information"
+  url: https://www.esalq.usp.br/lepse/imgs/conteudo_thumb/Energy-and-Information.pdf
+  volume: 225
+  number: 3
+  date: 1971
+
+landauer1961limit:
+  type: Article
+  author: "Landauer, R."
+  publisher: "IBM Journal of Research and Development"
+  title: "Irreversibility and Heat Generation in the Computing Process"
+  date: 1961
+  volume: 5
+  number: 3
+  url: https://sites.pitt.edu/~jdnorton/lectures/Rotman_Summer_School_2013/thermo_computing_docs/Landauer_1961.pdf
+
+meiborg2023entromatica:
+  type: Repository
+  title: Entromatica
+  author: "Daniel Meiborg"
+  url: https://github.com/DanielMeiborg/entromatica
+
+destatis2022electricity:
+  type: Web
+  title: 
+    value: Erdgas und Stromdurchschnittspreise
+    sentence-case: Erdgas und Stromdurchschnittspreise
+  date: 2022
+  author: "Statistisches Bundesamt (Destatis)"
+  url: https://www.destatis.de/DE/Themen/Wirtschaft/Preise/Erdgas-Strom-DurchschnittsPreise/_inhalt.html
+
+bennet1987demon:
+  type: Article
+  title: "Demons, Engines, and the Second Law"
+  date: 1987
+  author: "Charles Bennet"
+  publisher: "Scientific American"
+  url: https://www.aldebaran.cz/bulletin/2019_03/DemonsEnginesAndSecondLaw87.pdf
+
+gray1990informationtheory:
+  type: Article
+  title: "Entropy and Information Theory"
+  date: 1990
+  author: Robert M. Gray
+  publisher: Springer-Verlag
+  url: https://ee.stanford.edu/~gray/it.pdf
+
+tolver2016markovchains:
+  type: Article
+  title: "An introduction to Markov chains"
+  date: 2016
+  author: Anders Tolver
+  publisher: University of Copenhagen
+  url: http://old.math.ku.dk/noter/filer/stoknoter.pdf
